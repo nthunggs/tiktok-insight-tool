@@ -1,0 +1,11 @@
+services:
+  tiktok-research:
+    build: .
+    platform: linux/arm64
+    ports:
+      - "5001:5001"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PORT=5001
+    restart: unless-stopped
+    mem_limit: 800m

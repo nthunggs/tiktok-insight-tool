@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment & secrets
+.env
+.env.local
+*.key
+secrets/
+
+# Output data
+*.csv
+*.md.bak
+comments_*.csv
+videos_*.csv
+insight_report_*.md
+output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+
+# Claude Code
+.claude/settings.local.json

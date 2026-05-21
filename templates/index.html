@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="vi" x-data="app()" x-init="init()">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TikTok Research</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            border:  'hsl(240 5.9% 90%)',
+            input:   'hsl(240 5.9% 90%)',
+            ring:    'hsl(221 83% 53%)',
+            bg:      'hsl(0 0% 100%)',
+            fg:      'hsl(240 10% 3.9%)',
+            muted:       { DEFAULT: 'hsl(240 4.8% 95.9%)', fg: 'hsl(240 3.8% 46.1%)' },
+            primary:     { DEFAULT: 'hsl(221 83% 53%)',    fg: 'hsl(0 0% 100%)' },
+            accent:      { DEFAULT: 'hsl(240 4.8% 95.9%)', fg: 'hsl(240 10% 3.9%)' },
+            destructive: { DEFAULT: 'hsl(0 84% 60%)',      fg: 'hsl(0 0% 98%)' },
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { font-family: 'Inter', system-ui, sans-serif; }
+    body {
+      font-feature-settings: 'cv11', 'ss01', 'ss03';
+      background: hsl(240 5% 98%);
+      color: hsl(240 10% 3.9%);
+      -webkit-font-smoothing: antialiased;
+    }
+    [x-cloak] { display: none !important; }
+
+    /* Card primitive */
+    .card {
+      background: white;
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 10px;
+    }
+
+    /* Input primitive */
+    .input {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 13px;
+      background: white;
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 8px;
+      color: hsl(240 10% 3.9%);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input:focus {
+      outline: none;
+      border-color: hsl(221 83% 53%);
+      box-shadow: 0 0 0 3px hsl(221 83% 53% / 0.15);
+    }
+    .input::placeholder { color: hsl(240 3.8% 60%); }
+
+    .input-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+    }
+
+    /* Button primitives */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px; font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.12s;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .btn-primary {
+      background: hsl(240 10% 3.9%);
+      color: white;
+      border: 1px solid hsl(240 10% 3.9%);
+    }
+    .btn-primary:hover:not(:disabled) { background: hsl(240 6% 15%); }
+
+    .btn-accent {
+      background: hsl(221 83% 53%);
+      color: white;
+      border: 1px solid hsl(221 83% 53%);
+    }
+    .btn-accent:hover:not(:disabled) { background: hsl(221 83% 47%); }
+
+    .btn-ghost {
+      background: white;
+      color: hsl(240 10% 3.9%);
+      border: 1px solid hsl(240 5.9% 90%);
+    }
+    .btn-ghost:hover:not(:disabled) { background: hsl(240 4.8% 95.9%); }
+
+    .btn-icon { padding: 6px; }
+
+    /* Provider radio cards */
+    .provider-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 8px;
+      background: white;
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.12s;
+      position: relative;
+    }
+    .provider-card:hover { background: hsl(240 4.8% 96.5%); }
+    .provider-card.active {
+      border-color: hsl(240 10% 3.9%);
+      background: hsl(240 5% 98%);
+      box-shadow: 0 0 0 1px hsl(240 10% 3.9%) inset;
+    }
+    .provider-card svg { width: 18px; height: 18px; }
+    .provider-card .name { font-size: 11px; font-weight: 500; color: hsl(240 6% 25%); }
+    .provider-card .check {
+      position: absolute; top: 6px; right: 6px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: hsl(240 10% 3.9%); color: white;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Tag pills */
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: hsl(240 4.8% 95.9%);
+      color: hsl(240 6% 25%);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px; font-weight: 500;
+      border: 1px solid transparent;
+    }
+    .tag button { color: hsl(240 4% 46%); }
+    .tag button:hover { color: hsl(0 84% 60%); }
+
+    /* Tab group (segmented control) */
+    .seg {
+      display: flex;
+      background: hsl(240 4.8% 95.9%);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .seg-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px; font-weight: 500;
+      border-radius: 6px;
+      color: hsl(240 4% 46%);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .seg-btn:hover { color: hsl(240 6% 25%); }
+    .seg-btn.active {
+      background: white;
+      color: hsl(240 10% 3.9%);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* Range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: hsl(240 5.9% 90%);
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px; height: 14px;
+      background: hsl(240 10% 3.9%);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input[type="range"]:disabled::-webkit-slider-thumb { background: hsl(240 4% 65%); }
+
+    /* Section label */
+    .section-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: hsl(240 10% 3.9%);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+    .section-label svg { width: 14px; height: 14px; color: hsl(240 4% 46%); }
+
+    /* Code style */
+    kbd {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 1.5px 5px;
+      background: white;
+      border: 1px solid hsl(240 5.9% 85%);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      color: hsl(240 6% 25%);
+    }
+
+    /* Status dot */
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Log box */
+    .log-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      line-height: 1.65;
+      background: hsl(240 10% 3.9%);
+      color: hsl(240 5% 84%);
+    }
+    .log-box::-webkit-scrollbar { width: 8px; }
+    .log-box::-webkit-scrollbar-track { background: transparent; }
+    .log-box::-webkit-scrollbar-thumb { background: hsl(240 5% 25%); border-radius: 4px; }
+
+    /* Report styles */
+    .report h1 { font-size: 22px; font-weight: 700; margin: 16px 0 8px; letter-spacing: -0.02em; color: hsl(240 10% 3.9%); }
+    .report h2 { font-size: 16px; font-weight: 600; margin: 18px 0 6px; color: hsl(221 83% 30%); padding-bottom: 6px; border-bottom: 1px solid hsl(221 83% 90%); }
+    .report h3 { font-size: 14px; font-weight: 600; margin: 12px 0 4px; color: hsl(240 6% 15%); }
+    .report ul { list-style: disc; padding-left: 22px; margin: 6px 0; }
+    .report li { margin: 3px 0; color: hsl(240 6% 25%); font-size: 13px; }
+    .report p { margin: 6px 0; color: hsl(240 6% 30%); font-size: 13px; line-height: 1.65; }
+    .report blockquote { border-left: 3px solid hsl(221 83% 53%); padding: 4px 12px; color: hsl(240 4% 46%); font-style: italic; background: hsl(221 100% 98%); border-radius: 0 4px 4px 0; margin: 8px 0; }
+    .report strong { color: hsl(240 10% 3.9%); font-weight: 600; }
+    .report code { background: hsl(240 4.8% 95.9%); padding: 1.5px 5px; border-radius: 4px; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; }
+
+    /* Stat */
+    .stat-num { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: hsl(240 10% 3.9%); }
+    .stat-label { font-size: 10.5px; color: hsl(240 4% 46%); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="border-b border-border bg-white sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-5 h-14 flex items-center gap-3">
+      <div class="w-7 h-7 rounded-md bg-fg flex items-center justify-center text-white">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+      </div>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm font-semibold text-fg">TikTok Research</span>
+        <span class="text-[11px] text-muted-fg">Comment scraper & insight analyzer</span>
+      </div>
+
+      <div class="ml-auto flex items-center gap-3">
+        <div x-show="provider && apiKey" class="hidden md:flex items-center gap-1.5 text-[11px] text-muted-fg bg-muted px-2.5 py-1 rounded-md">
+          <span class="dot" :class="{
+                'bg-orange-500': provider === 'anthropic',
+                'bg-emerald-500': provider === 'openai',
+                'bg-blue-500': provider === 'gemini' }"></span>
+          <span class="font-mono" x-text="model || provider"></span>
+        </div>
+
+        <template x-if="jobId">
+          <div>
+            <template x-if="status === 'running' || status === 'analyzing'">
+              <span class="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                <span class="dot pulse bg-emerald-500"></span>
+                <span x-text="status === 'running' ? 'Đang scrape' : 'Đang phân tích'"></span>
+              </span>
+            </template>
+            <template x-if="status === 'done'">
+              <span class="text-[11px] bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-md border border-blue-100">Scrape xong</span>
+            </template>
+            <template x-if="status === 'analyzed'">
+              <span class="text-[11px] bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-md border border-emerald-100">Đã phân tích</span>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- ═══════ LEFT: Config ═══════ -->
+    <aside class="lg:col-span-4 space-y-4">
+
+      <!-- AI Provider -->
+      <div class="card p-5">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+          AI Model
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <button @click="setProvider('anthropic')" :class="['provider-card', provider === 'anthropic' && 'active']">
+            <svg viewBox="0 0 24 24" fill="#d97757"><path d="M12 2.5L3 21.5h3.5l1.4-3.4h8.2l1.4 3.4H21L12 2.5zm-3 12l3-7.2 3 7.2H9z"/></svg>
+            <span class="name">Claude</span>
+            <span x-show="provider === 'anthropic'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </button>
+          <button @click="setProvider('openai')" :class="['provider-card', provider === 'openai' && 'active']">
+            <svg viewBox="0 0 24 24" fill="#0d8a6a"><path d="M22.28 9.82a5.92 5.92 0 0 0-.51-4.91 6 6 0 0 0-6.5-2.88A6 6 0 0 0 4.86 4a5.92 5.92 0 0 0-3.94 2.86 6 6 0 0 0 .74 7.05 5.92 5.92 0 0 0 .51 4.91 6 6 0 0 0 6.5 2.88A6 6 0 0 0 19.14 20a5.92 5.92 0 0 0 3.94-2.86 6 6 0 0 0-.8-7.32zm-9 12.66a4.5 4.5 0 0 1-2.88-1.04l.14-.08 4.79-2.77a.79.79 0 0 0 .39-.68v-6.76l2.02 1.17v5.6a4.5 4.5 0 0 1-4.46 4.56zM3.65 17.62a4.48 4.48 0 0 1-.54-3.03l.14.08 4.79 2.77a.78.78 0 0 0 .79 0L14.7 14v2.34l-4.79 2.77a4.5 4.5 0 0 1-6.26-1.49zM2.4 7.06a4.5 4.5 0 0 1 2.35-1.98v5.7a.77.77 0 0 0 .39.68l5.81 3.35-2.02 1.17-4.79-2.77a4.5 4.5 0 0 1-1.74-6.15zm16.62 3.86l-5.86-3.39 2.02-1.16 4.79 2.77a4.5 4.5 0 0 1-.7 8.13v-5.7a.78.78 0 0 0-.25-.65zm2.01-3.05l-.14-.09L16.1 5.1a.78.78 0 0 0-.79 0L9.5 8.45V6.11l4.79-2.77a4.5 4.5 0 0 1 6.74 4.53zM8.4 12.07L6.38 10.9V5.32a4.5 4.5 0 0 1 7.38-3.46l-.14.08-4.79 2.77a.79.79 0 0 0-.39.68zm1.1-2.36l2.59-1.49 2.59 1.49v2.99l-2.59 1.49-2.59-1.49z"/></svg>
+            <span class="name">OpenAI</span>
+            <span x-show="provider === 'openai'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </button>
+          <button @click="setProvider('gemini')" :class="['provider-card', provider === 'gemini' && 'active']">
+            <svg viewBox="0 0 24 24"><defs><linearGradient id="gemg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4285f4"/><stop offset="100%" stop-color="#9b72cb"/></linearGradient></defs><path fill="url(#gemg)" d="M12 2L8.5 8.5 2 12l6.5 3.5L12 22l3.5-6.5L22 12l-6.5-3.5L12 2z"/></svg>
+            <span class="name">Gemini</span>
+            <span x-show="provider === 'gemini'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </button>
+        </div>
+
+        <!-- API key -->
+        <div class="space-y-1.5 mb-3">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-medium text-fg">API Key</label>
+            <a :href="apiKeyLink" target="_blank" class="text-[10.5px] text-primary hover:underline">Get key →</a>
+          </div>
+          <div class="relative">
+            <input
+              :type="showKey ? 'text' : 'password'"
+              x-model="apiKey"
+              @input.debounce.700ms="onKeyChange()"
+              :placeholder="placeholderKey"
+              class="input input-mono pr-9"
+            />
+            <button @click="showKey = !showKey" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-1">
+              <svg x-show="!showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg x-show="showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Model -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-medium text-fg">Model</label>
+            <button @click="fetchModels()" :disabled="!apiKey.trim() || loadingModels" class="text-[10.5px] text-primary hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1">
+              <svg :class="{ 'animate-spin': loadingModels }" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+              <span x-text="loadingModels ? 'Loading...' : 'Refresh'"></span>
+            </button>
+          </div>
+          <select x-model="model" @change="saveProviderConfig()" class="input">
+            <template x-if="availableModels.length === 0">
+              <option value="" disabled>— Nhập API key để load model —</option>
+            </template>
+            <template x-for="m in availableModels" :key="m.id">
+              <option :value="m.id" x-text="m.label"></option>
+            </template>
+          </select>
+          <div x-show="modelError" class="text-[10.5px] text-destructive flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span x-text="modelError"></span>
+          </div>
+          <div x-show="availableModels.length > 0" class="text-[10.5px] text-muted-fg" x-text="availableModels.length + ' model khả dụng'"></div>
+        </div>
+      </div>
+
+      <!-- ms_token -->
+      <div class="card p-5">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+          TikTok ms_token
+        </div>
+        <textarea
+          x-model="msToken"
+          @input.debounce.500ms="saveConfig()"
+          rows="3"
+          placeholder="Paste msToken từ cookie TikTok..."
+          class="input input-mono resize-none"
+          :disabled="isRunning"
+        ></textarea>
+        <details class="mt-3">
+          <summary class="text-[11px] text-primary cursor-pointer hover:underline select-none flex items-center gap-1">
+            <svg class="transition-transform" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            Cách lấy trên macOS
+          </summary>
+          <div class="mt-3 space-y-3">
+
+            <div class="rounded-md border border-border p-3 bg-muted/50">
+              <div class="flex items-center gap-2 text-[12px] font-medium text-fg mb-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Chrome / Brave / Edge
+              </div>
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Mở <code>tiktok.com</code> → đăng nhập</li>
+                <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → mở DevTools</li>
+                <li>Tab <strong class="text-fg">Application</strong> (bấm <kbd>»</kbd> nếu ẩn)</li>
+                <li>Sidebar: <strong class="text-fg">Cookies</strong> → <code>https://www.tiktok.com</code></li>
+                <li>Tìm hàng <code>msToken</code> → copy <strong class="text-fg">Value</strong></li>
+              </ol>
+            </div>
+
+            <div class="rounded-md border border-border p-3 bg-muted/50">
+              <div class="flex items-center gap-2 text-[12px] font-medium text-fg mb-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Safari
+              </div>
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Settings → Advanced → tick <em>Show Develop menu</em></li>
+                <li>Mở tiktok.com → đăng nhập</li>
+                <li>Develop → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
+                <li>Tab <strong class="text-fg">Storage</strong> → Cookies → tiktok.com</li>
+                <li>Tìm <code>msToken</code> → copy Value</li>
+              </ol>
+            </div>
+
+            <div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 flex items-start gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Token hết hạn sau vài giờ — gặp lỗi auth thì lấy lại token mới.</span>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Source -->
+      <div class="card p-5">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Nguồn dữ liệu
+        </div>
+
+        <div class="seg mb-4">
+          <button @click="sourceMode = 'hashtag'" :class="['seg-btn', sourceMode === 'hashtag' && 'active']">Hashtag</button>
+          <button @click="sourceMode = 'url'" :class="['seg-btn', sourceMode === 'url' && 'active']">URL</button>
+          <button @click="sourceMode = 'both'" :class="['seg-btn', sourceMode === 'both' && 'active']">Cả hai</button>
+        </div>
+
+        <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'" class="space-y-2.5">
+          <div class="flex flex-wrap gap-1.5">
+            <template x-for="(tag, i) in hashtags" :key="i">
+              <span class="tag">
+                #<span x-text="tag"></span>
+                <button @click="removeTag(i)" :disabled="isRunning" class="leading-none text-[13px]">×</button>
+              </span>
+            </template>
+          </div>
+          <div class="flex gap-2">
+            <input x-model="newTag" @keydown.enter.prevent="addTag()" type="text" placeholder="Thêm hashtag…" class="input flex-1" :disabled="isRunning" />
+            <button @click="addTag()" :disabled="isRunning" class="btn btn-ghost btn-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div x-show="sourceMode === 'url' || sourceMode === 'both'" class="space-y-1.5" :class="{ 'mt-4 pt-4 border-t border-border': sourceMode === 'both' }">
+          <textarea x-model="videoUrls" rows="4"
+            placeholder="https://www.tiktok.com/@user/video/123…&#10;Mỗi dòng 1 URL"
+            class="input input-mono resize-none" :disabled="isRunning"></textarea>
+          <div class="text-[10.5px] text-muted-fg" x-text="videoUrlList.length + ' URL hợp lệ'"></div>
+        </div>
+      </div>
+
+      <!-- WIN criteria -->
+      <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'" class="card p-5">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          Tiêu chí WIN
+        </div>
+        <p class="text-[11px] text-muted-fg -mt-2 mb-3">Chỉ scrape video đạt cả 4 chỉ số.</p>
+
+        <div class="space-y-3.5">
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Min views</span>
+              <span class="font-medium text-fg" x-text="formatNum(minViews)"></span>
+            </div>
+            <input type="range" min="10000" max="1000000" step="10000" x-model.number="minViews" :disabled="isRunning" />
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Min engagement</span>
+              <span class="font-medium text-fg" x-text="minEngagementRate + '%'"></span>
+            </div>
+            <input type="range" min="1" max="20" step="0.5" x-model.number="minEngagementRate" :disabled="isRunning" />
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Min comment rate <span class="text-[10px] text-amber-600 font-medium ml-0.5">★ key</span></span>
+              <span class="font-medium text-fg" x-text="minCommentRate + '%'"></span>
+            </div>
+            <input type="range" min="0.1" max="2" step="0.1" x-model.number="minCommentRate" :disabled="isRunning" />
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Min like rate</span>
+              <span class="font-medium text-fg" x-text="minLikeRate + '%'"></span>
+            </div>
+            <input type="range" min="1" max="20" step="0.5" x-model.number="minLikeRate" :disabled="isRunning" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Counts -->
+      <div class="card p-5">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Giới hạn
+        </div>
+        <div class="space-y-3.5">
+          <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'">
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Video / hashtag</span>
+              <span class="font-medium text-fg" x-text="maxVideos"></span>
+            </div>
+            <input type="range" min="10" max="100" step="5" x-model.number="maxVideos" :disabled="isRunning" />
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-muted-fg">Comment / video</span>
+              <span class="font-medium text-fg" x-text="maxComments"></span>
+            </div>
+            <input type="range" min="20" max="200" step="10" x-model.number="maxComments" :disabled="isRunning" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Action -->
+      <button @click="startScrape()" :disabled="isRunning || !msToken.trim() || !canStart" class="btn btn-primary w-full" style="padding: 11px 16px; font-size: 13px;">
+        <template x-if="!isRunning">
+          <span class="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Bắt đầu Scrape
+          </span>
+        </template>
+        <template x-if="isRunning">
+          <span class="flex items-center gap-2">
+            <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" stroke-opacity="0.25"/>
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            Đang chạy
+          </span>
+        </template>
+      </button>
+
+    </aside>
+
+    <!-- ═══════ RIGHT: Results ═══════ -->
+    <section class="lg:col-span-8 space-y-4">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-3" x-show="jobId" x-cloak>
+        <div class="card p-4">
+          <div class="stat-num" x-text="videoCount.toLocaleString()">0</div>
+          <div class="stat-label">Video WIN</div>
+        </div>
+        <div class="card p-4">
+          <div class="stat-num" x-text="commentCount.toLocaleString()">0</div>
+          <div class="stat-label">Comment</div>
+        </div>
+        <div class="card p-4">
+          <div class="stat-num" x-text="sourceCount">0</div>
+          <div class="stat-label" x-text="sourceMode === 'url' ? 'URL' : (sourceMode === 'both' ? 'Nguồn' : 'Hashtag')">—</div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="card overflow-hidden" x-show="jobId || logs.length" x-cloak>
+        <div class="flex items-center justify-between px-4 h-10 border-b border-border">
+          <div class="flex items-center gap-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-fg"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span class="text-[11.5px] font-semibold text-fg">Live log</span>
+          </div>
+          <button @click="logs = []" class="text-[11px] text-muted-fg hover:text-fg">Clear</button>
+        </div>
+        <div class="log-box p-4 h-64 overflow-y-auto" x-ref="logBox">
+          <template x-if="logs.length === 0">
+            <p class="text-muted-fg">Sẵn sàng. Nhấn "Bắt đầu Scrape"...</p>
+          </template>
+          <template x-for="(line, i) in logs" :key="i">
+            <p x-text="line"></p>
+          </template>
+        </div>
+      </div>
+
+      <!-- Action bar -->
+      <div class="flex flex-wrap gap-2" x-show="status === 'done' || status === 'analyzed'" x-cloak>
+        <button @click="download('csv')" class="btn btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Tải CSV
+          <span class="text-muted-fg font-mono">(<span x-text="commentCount.toLocaleString()"></span>)</span>
+        </button>
+
+        <button x-show="status === 'done'" @click="analyze()" :disabled="!apiKey.trim() || !model" class="btn btn-accent">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+          Phân tích với <span x-text="providerLabel"></span>
+        </button>
+
+        <button x-show="status === 'analyzed' && report" @click="download('report')" class="btn btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          Tải báo cáo .md
+        </button>
+      </div>
+
+      <!-- Analyzing -->
+      <div x-show="status === 'analyzing'" x-cloak class="card p-6 text-center" style="background: hsl(221 100% 99%);">
+        <div class="inline-flex items-center gap-2.5 text-[13px] text-primary font-medium">
+          <svg class="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" stroke-opacity="0.25"/>
+            <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <span x-text="providerLabel"></span> đang phân tích <span x-text="commentCount.toLocaleString()"></span> comment
+        </div>
+        <p class="text-[11.5px] text-muted-fg mt-2">Thường mất 1–3 phút</p>
+      </div>
+
+      <!-- Report -->
+      <div x-show="report" x-cloak class="card overflow-hidden">
+        <div class="flex items-center justify-between px-5 h-11 border-b border-border bg-muted/30">
+          <div class="flex items-center gap-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span class="text-[12px] font-semibold text-fg">Insight Report</span>
+          </div>
+          <div class="text-[10.5px] text-muted-fg font-mono" x-text="provider + ' · ' + model"></div>
+        </div>
+        <div class="report p-6 overflow-auto" x-html="renderedReport"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div x-show="!jobId" class="card p-12 text-center border-dashed">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-muted flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-fg"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <p class="text-[13px] text-fg font-medium">Sẵn sàng phân tích</p>
+        <p class="text-[11.5px] text-muted-fg mt-1.5">Cấu hình AI provider, ms_token, hashtag rồi nhấn Bắt đầu Scrape</p>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const FALLBACK_MODELS = {
+      anthropic: [
+        { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
+        { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+        { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
+        { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+        { id: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+        { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+      ],
+      openai: [
+        { id: 'gpt-4o', label: 'gpt-4o' },
+        { id: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+        { id: 'gpt-4-turbo', label: 'gpt-4-turbo' },
+        { id: 'gpt-4', label: 'gpt-4' },
+        { id: 'o1', label: 'o1' },
+        { id: 'o1-mini', label: 'o1-mini' },
+        { id: 'o3-mini', label: 'o3-mini' },
+        { id: 'o3', label: 'o3' },
+        { id: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
+      ],
+      gemini: [
+        { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+        { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+        { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+        { id: 'gemini-2.0-flash-thinking-exp', label: 'Gemini 2.0 Flash Thinking' },
+        { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+        { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+        { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
+      ],
+    };
+
+    const PLACEHOLDER_KEYS = {
+      anthropic: 'sk-ant-api03-...',
+      openai: 'sk-proj-...',
+      gemini: 'AIzaSy...',
+    };
+
+    const KEY_LINKS = {
+      anthropic: 'https://console.anthropic.com/settings/keys',
+      openai: 'https://platform.openai.com/api-keys',
+      gemini: 'https://aistudio.google.com/apikey',
+    };
+
+    function app() {
+      return {
+        // AI
+        provider: 'anthropic',
+        apiKey: '',
+        model: '',
+        showKey: false,
+        loadingModels: false,
+        modelError: '',
+        _keys:   { anthropic: '', openai: '', gemini: '' },
+        _models: { anthropic: '', openai: '', gemini: '' },
+        _modelLists: { anthropic: [], openai: [], gemini: [] },
+
+        // TikTok
+        msToken: '',
+        sourceMode: 'hashtag',
+        hashtags: ['gymstore', 'gym', 'supplement', 'protein', 'wheyprotein', 'fitness'],
+        newTag: '',
+        videoUrls: '',
+        maxVideos: 30,
+        maxComments: 80,
+
+        // WIN criteria
+        minViews: 100000,
+        minEngagementRate: 5,
+        minCommentRate: 0.3,
+        minLikeRate: 5,
+
+        // Job
+        jobId: null,
+        status: 'idle',
+        logs: [],
+        videoCount: 0,
+        commentCount: 0,
+        report: null,
+        _pollTimer: null,
+
+        get isRunning() { return this.status === 'running' || this.status === 'analyzing'; },
+        get renderedReport() { return this.report ? marked.parse(this.report) : ''; },
+        get availableModels() {
+          const live = this._modelLists[this.provider];
+          return live && live.length > 0 ? live : FALLBACK_MODELS[this.provider] || [];
+        },
+        get placeholderKey() { return PLACEHOLDER_KEYS[this.provider]; },
+        get apiKeyLink() { return KEY_LINKS[this.provider]; },
+        get providerLabel() {
+          return { anthropic: 'Claude', openai: 'OpenAI', gemini: 'Gemini' }[this.provider] || this.provider;
+        },
+        get videoUrlList() {
+          return this.videoUrls.split('\n').map(s => s.trim()).filter(s => /tiktok\.com/.test(s) && /\d{10,}/.test(s));
+        },
+        get canStart() {
+          if (this.sourceMode === 'hashtag') return this.hashtags.length > 0;
+          if (this.sourceMode === 'url') return this.videoUrlList.length > 0;
+          return this.hashtags.length > 0 && this.videoUrlList.length > 0;
+        },
+        get sourceCount() {
+          if (this.sourceMode === 'url') return this.videoUrlList.length;
+          if (this.sourceMode === 'both') return this.hashtags.length + this.videoUrlList.length;
+          return this.hashtags.length;
+        },
+
+        init() {
+          const saved = localStorage.getItem('ttr_config_v2');
+          if (saved) {
+            try {
+              const c = JSON.parse(saved);
+              this.msToken = c.msToken || '';
+              this.provider = c.provider || 'anthropic';
+              this._keys = c.keys || this._keys;
+              this._models = c.models || this._models;
+              this._modelLists = c.modelLists || this._modelLists;
+              this.hashtags = c.hashtags || this.hashtags;
+              this.sourceMode = c.sourceMode || 'hashtag';
+              this.minViews = c.minViews ?? this.minViews;
+              this.minEngagementRate = c.minEngagementRate ?? this.minEngagementRate;
+              this.minCommentRate = c.minCommentRate ?? this.minCommentRate;
+              this.minLikeRate = c.minLikeRate ?? this.minLikeRate;
+            } catch (e) {}
+          }
+          this.apiKey = this._keys[this.provider] || '';
+          this.model = this._models[this.provider] || (this.availableModels[0]?.id || '');
+        },
+
+        setProvider(p) {
+          this._keys[this.provider] = this.apiKey;
+          this._models[this.provider] = this.model;
+          this.provider = p;
+          this.apiKey = this._keys[p] || '';
+          this.model = this._models[p] || (this.availableModels[0]?.id || '');
+          this.modelError = '';
+          this.saveConfig();
+        },
+
+        onKeyChange() {
+          this.saveProviderConfig();
+          if (this.apiKey.trim().length > 20) {
+            this.fetchModels();
+          }
+        },
+
+        async fetchModels() {
+          if (!this.apiKey.trim()) return;
+          this.loadingModels = true;
+          this.modelError = '';
+          try {
+            const res = await fetch('/api/models', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ provider: this.provider, api_key: this.apiKey }),
+            });
+            const data = await res.json();
+            if (data.error) { this.modelError = data.error; return; }
+            this._modelLists[this.provider] = data.models || [];
+            // Reset model to first if current not in list
+            const ids = (data.models || []).map(m => m.id);
+            if (!ids.includes(this.model) && ids.length > 0) {
+              this.model = ids[0];
+            }
+            this.saveConfig();
+          } catch (e) {
+            this.modelError = e.message;
+          } finally {
+            this.loadingModels = false;
+          }
+        },
+
+        saveProviderConfig() {
+          this._keys[this.provider] = this.apiKey;
+          this._models[this.provider] = this.model;
+          this.saveConfig();
+        },
+
+        saveConfig() {
+          localStorage.setItem('ttr_config_v2', JSON.stringify({
+            msToken: this.msToken, provider: this.provider,
+            keys: this._keys, models: this._models, modelLists: this._modelLists,
+            hashtags: this.hashtags, sourceMode: this.sourceMode,
+            minViews: this.minViews, minEngagementRate: this.minEngagementRate,
+            minCommentRate: this.minCommentRate, minLikeRate: this.minLikeRate,
+          }));
+        },
+
+        formatNum(n) {
+          if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+          if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+          return n.toString();
+        },
+
+        addTag() {
+          const t = this.newTag.trim().replace(/^#/, '');
+          if (t && !this.hashtags.includes(t)) this.hashtags.push(t);
+          this.newTag = '';
+          this.saveConfig();
+        },
+        removeTag(i) { this.hashtags.splice(i, 1); this.saveConfig(); },
+
+        async startScrape() {
+          if (!this.msToken.trim() || !this.canStart) return;
+          this.saveConfig();
+          this.logs = []; this.report = null;
+          this.videoCount = 0; this.commentCount = 0;
+          this.status = 'running';
+
+          try {
+            const res = await fetch('/api/scrape', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ms_token: this.msToken,
+                source_mode: this.sourceMode,
+                hashtags: this.hashtags,
+                video_urls: this.videoUrlList,
+                max_videos: this.maxVideos,
+                max_comments: this.maxComments,
+                min_views: this.minViews,
+                min_engagement_rate: this.minEngagementRate,
+                min_comment_rate: this.minCommentRate,
+                min_like_rate: this.minLikeRate,
+              }),
+            });
+            const data = await res.json();
+            if (data.error) { this.logs.push('Error: ' + data.error); this.status = 'idle'; return; }
+            this.jobId = data.job_id;
+            this._startPolling();
+          } catch (e) {
+            this.logs.push('Connection error: ' + e.message); this.status = 'idle';
+          }
+        },
+
+        _startPolling() {
+          this._pollTimer = setInterval(() => this._poll(), 2000);
+        },
+
+        async _poll() {
+          if (!this.jobId) return;
+          try {
+            const res = await fetch(`/api/jobs/${this.jobId}`);
+            const data = await res.json();
+            this.logs = data.logs || [];
+            this.videoCount = data.video_count || 0;
+            this.commentCount = data.comment_count || 0;
+            this.status = data.status;
+            if (data.report) this.report = data.report;
+            if (data.status === 'done' || data.status === 'analyzed' || data.status === 'error') {
+              clearInterval(this._pollTimer);
+            }
+            this.$nextTick(() => {
+              const box = this.$refs.logBox;
+              if (box) box.scrollTop = box.scrollHeight;
+            });
+          } catch (e) { console.error(e); }
+        },
+
+        async analyze() {
+          if (!this.jobId || !this.apiKey.trim() || !this.model) return;
+          this.status = 'analyzing';
+          try {
+            const res = await fetch(`/api/analyze/${this.jobId}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ provider: this.provider, model: this.model, api_key: this.apiKey }),
+            });
+            const data = await res.json();
+            if (data.error) { this.logs.push('Error: ' + data.error); this.status = 'done'; return; }
+            this._startPolling();
+          } catch (e) {
+            this.logs.push('Error: ' + e.message); this.status = 'done';
+          }
+        },
+
+        download(type) {
+          if (!this.jobId) return;
+          window.location.href = `/api/jobs/${this.jobId}/download/${type}`;
+        },
+      };
+    }
+  </script>
+</body>
+</html>
