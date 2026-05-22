@@ -1,6 +1,7 @@
 """
 TikTok Research Tool — Flask Backend
-Multi-provider AI: Anthropic / OpenAI / Gemini
+Multi-provider AI + 5 source modes (hashtag, URL, user, keyword, related)
++ Multi-session & proxy support
 """
 
 import asyncio
@@ -82,15 +83,12 @@ def build_video_meta(d: dict, source: str) -> dict:
 
 # ─── AI PROVIDERS ────────────────────────────────────────────────────────────
 
-def call_ai(provider: str, model: str, api_key: str, system: str, user: str, max_tokens: int = 2000) -> str:
-    """Universal AI caller."""
+def call_ai(provider, model, api_key, system, user, max_tokens=2000):
     if provider == "anthropic":
         from anthropic import Anthropic
         client = Anthropic(api_key=api_key)
         resp = client.messages.create(
-            model=model,
-            max_tokens=max_tokens,
-            system=system,
+            model=model, max_tokens=max_tokens, system=system,
             messages=[{"role": "user", "content": user}],
         )
         return resp.content[0].text
@@ -99,12 +97,8 @@ def call_ai(provider: str, model: str, api_key: str, system: str, user: str, max
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
-            model=model,
-            max_completion_tokens=max_tokens,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
+            model=model, max_completion_tokens=max_tokens,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         )
         return resp.choices[0].message.content or ""
 
@@ -112,10 +106,7 @@ def call_ai(provider: str, model: str, api_key: str, system: str, user: str, max
         import google.generativeai as genai
         genai.configure(api_key=api_key)
         gmodel = genai.GenerativeModel(model, system_instruction=system)
-        resp = gmodel.generate_content(
-            user,
-            generation_config={"max_output_tokens": max_tokens, "temperature": 0.7},
-        )
+        resp = gmodel.generate_content(user, generation_config={"max_output_tokens": max_tokens, "temperature": 0.7})
         return resp.text or ""
 
     raise ValueError(f"Provider không hỗ trợ: {provider}")
@@ -130,40 +121,27 @@ def index():
 
 @app.route("/api/models", methods=["POST"])
 def list_models():
-    """Fetch danh sách model thật từ provider dùng API key của user."""
     data = request.json or {}
     provider = data.get("provider", "")
     api_key = data.get("api_key", "").strip()
-
     if not api_key:
         return jsonify({"error": "Cần API key"}), 400
-
     try:
         if provider == "anthropic":
             from anthropic import Anthropic
             client = Anthropic(api_key=api_key)
-            models = []
-            for m in client.models.list().data:
-                models.append({
-                    "id": m.id,
-                    "label": getattr(m, "display_name", None) or m.id,
-                })
+            models = [{"id": m.id, "label": getattr(m, "display_name", None) or m.id} for m in client.models.list().data]
             return jsonify({"models": models})
 
         if provider == "openai":
             from openai import OpenAI
             client = OpenAI(api_key=api_key)
             chat_prefixes = ("gpt-", "o1", "o3", "o4", "chatgpt-")
-            excluded_terms = (
-                "embedding", "whisper", "tts", "dall-e", "audio", "image",
-                "realtime", "transcribe", "moderation", "-search-", "-ft-",
-            )
+            excluded = ("embedding", "whisper", "tts", "dall-e", "audio", "image", "realtime", "transcribe", "moderation", "-search-", "-ft-")
             models = []
             for m in client.models.list().data:
-                mid = m.id
-                if any(mid.startswith(p) for p in chat_prefixes) and \
-                   not any(x in mid for x in excluded_terms):
-                    models.append({"id": mid, "label": mid})
+                if any(m.id.startswith(p) for p in chat_prefixes) and not any(x in m.id for x in excluded):
+                    models.append({"id": m.id, "label": m.id})
             models.sort(key=lambda x: x["id"])
             return jsonify({"models": models})
 
@@ -174,13 +152,11 @@ def list_models():
             for m in genai.list_models():
                 if "generateContent" in m.supported_generation_methods:
                     mid = m.name.replace("models/", "")
-                    label = getattr(m, "display_name", None) or mid
-                    models.append({"id": mid, "label": label})
+                    models.append({"id": mid, "label": getattr(m, "display_name", None) or mid})
             models.sort(key=lambda x: x["id"], reverse=True)
             return jsonify({"models": models})
 
         return jsonify({"error": "Provider không hỗ trợ"}), 400
-
     except Exception as e:
         return jsonify({"error": f"{type(e).__name__}: {e}"}), 400
 
@@ -188,10 +164,39 @@ def list_models():
 @app.route("/api/scrape", methods=["POST"])
 def start_scrape():
     data = request.json or {}
-    ms_token = data.get("ms_token", "").strip()
-    source_mode = data.get("source_mode", "hashtag")
-    hashtags = [h.strip().lstrip("#") for h in data.get("hashtags", []) if h.strip()]
-    video_urls = [u.strip() for u in data.get("video_urls", []) if u.strip()]
+
+    # ms_tokens: array (mỗi dòng 1 token)
+    ms_tokens_raw = data.get("ms_tokens", "")
+    if isinstance(ms_tokens_raw, str):
+        ms_tokens = [t.strip() for t in ms_tokens_raw.split("\n") if t.strip()]
+    elif isinstance(ms_tokens_raw, list):
+        ms_tokens = [str(t).strip() for t in ms_tokens_raw if str(t).strip()]
+    else:
+        ms_tokens = []
+
+    num_sessions = max(1, min(int(data.get("num_sessions", 1)), 3))
+
+    # Proxy (optional)
+    proxy_cfg = data.get("proxy") or {}
+    proxies = []
+    if proxy_cfg.get("server", "").strip():
+        proxies.append({
+            "server": proxy_cfg["server"].strip(),
+            "username": proxy_cfg.get("username", "").strip(),
+            "password": proxy_cfg.get("password", "").strip(),
+        })
+
+    # Sources
+    sources_in = data.get("sources") or {}
+    sources = {
+        "hashtags":      [h.strip().lstrip("#") for h in sources_in.get("hashtags", []) if str(h).strip()],
+        "video_urls":    [u.strip() for u in sources_in.get("video_urls", []) if str(u).strip()],
+        "usernames":     [u.strip().lstrip("@") for u in sources_in.get("usernames", []) if str(u).strip()],
+        "keywords":      [k.strip() for k in sources_in.get("keywords", []) if str(k).strip()],
+        "related_seeds": [u.strip() for u in sources_in.get("related_seeds", []) if str(u).strip()],
+    }
+    related_count = max(5, min(int(data.get("related_count", 20)), 50))
+
     max_videos = max(1, min(int(data.get("max_videos", 30)), 100))
     max_comments = max(1, min(int(data.get("max_comments", 80)), 200))
 
@@ -202,27 +207,24 @@ def start_scrape():
         "min_like_rate": float(data.get("min_like_rate", 5.0)),
     }
 
-    if not ms_token:
+    # Validate
+    if not ms_tokens:
         return jsonify({"error": "Thiếu ms_token"}), 400
-    if source_mode in ("hashtag", "both") and not hashtags:
-        return jsonify({"error": "Cần ít nhất 1 hashtag"}), 400
-    if source_mode in ("url", "both") and not video_urls:
-        return jsonify({"error": "Cần ít nhất 1 URL video"}), 400
+    if num_sessions > len(ms_tokens):
+        return jsonify({"error": f"Cần {num_sessions} ms_token cho {num_sessions} session"}), 400
+    if not any(sources.values()):
+        return jsonify({"error": "Phải bật & nhập dữ liệu cho ít nhất 1 nguồn"}), 400
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {
-        "status": "running",
-        "logs": [],
-        "comments": [],
-        "videos": [],
-        "report": None,
-        "created_at": datetime.now().isoformat(),
+        "status": "running", "logs": [], "comments": [], "videos": [],
+        "report": None, "created_at": datetime.now().isoformat(),
     }
 
     thread = threading.Thread(
         target=lambda: asyncio.run(_scrape_job(
-            job_id, ms_token, source_mode, hashtags, video_urls,
-            max_videos, max_comments, criteria,
+            job_id, ms_tokens, num_sessions, proxies, sources,
+            related_count, max_videos, max_comments, criteria,
         )),
         daemon=True,
     )
@@ -236,12 +238,9 @@ def get_job(job_id):
     if not job:
         return jsonify({"error": "Job không tồn tại"}), 404
     return jsonify({
-        "status": job["status"],
-        "logs": job["logs"],
-        "video_count": len(job["videos"]),
-        "comment_count": len(job["comments"]),
-        "report": job.get("report"),
-        "error": job.get("error"),
+        "status": job["status"], "logs": job["logs"],
+        "video_count": len(job["videos"]), "comment_count": len(job["comments"]),
+        "report": job.get("report"), "error": job.get("error"),
         "analysis_error": job.get("analysis_error"),
     })
 
@@ -260,7 +259,7 @@ def analyze_job(job_id):
     api_key = data.get("api_key", "")
 
     if not api_key.strip():
-        return jsonify({"error": "Thiếu API key cho " + provider}), 400
+        return jsonify({"error": f"Thiếu API key cho {provider}"}), 400
     if not model.strip():
         return jsonify({"error": "Chưa chọn model"}), 400
 
@@ -288,19 +287,17 @@ def download(job_id, file_type):
         output.seek(0)
         return send_file(
             io.BytesIO(output.getvalue().encode("utf-8-sig")),
-            mimetype="text/csv",
-            as_attachment=True,
+            mimetype="text/csv", as_attachment=True,
             download_name=f"tiktok_comments_{job_id}.csv",
         )
 
     if file_type == "report":
         report = job.get("report")
         if not report:
-            return jsonify({"error": "Chưa có báo cáo phân tích"}), 400
+            return jsonify({"error": "Chưa có báo cáo"}), 400
         return send_file(
             io.BytesIO(report.encode("utf-8")),
-            mimetype="text/markdown",
-            as_attachment=True,
+            mimetype="text/markdown", as_attachment=True,
             download_name=f"insight_report_{job_id}.md",
         )
 
@@ -309,70 +306,104 @@ def download(job_id, file_type):
 
 # ─── BACKGROUND TASKS ────────────────────────────────────────────────────────
 
-async def _scrape_job(job_id, ms_token, source_mode, hashtags, video_urls,
-                       max_videos, max_comments, criteria):
+async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, sources,
+                       related_count, max_videos, max_comments, criteria):
     job = jobs[job_id]
 
     def log(msg):
         job["logs"].append(msg)
 
     try:
-        log(f"⚙️  Tiêu chí WIN: ≥{criteria['min_views']:,} views | "
-            f"engagement ≥{criteria['min_engagement_rate']}% | "
-            f"comment rate ≥{criteria['min_comment_rate']}% | "
-            f"like rate ≥{criteria['min_like_rate']}%")
+        log(f"⚙️  WIN: ≥{criteria['min_views']:,}v | eng ≥{criteria['min_engagement_rate']}% | "
+            f"cmt ≥{criteria['min_comment_rate']}% | like ≥{criteria['min_like_rate']}%")
+        log(f"📡 Sessions: {num_sessions} | Tokens: {len(ms_tokens)} | "
+            f"Proxy: {'✓ ' + proxies[0]['server'] if proxies else '✗ direct'}")
+
+        session_kwargs = {
+            "ms_tokens": ms_tokens,
+            "num_sessions": num_sessions,
+            "sleep_after": 3,
+            "headless": True,
+        }
+        if proxies:
+            session_kwargs["proxies"] = proxies
 
         async with TikTokApi() as api:
-            await api.create_sessions(
-                ms_tokens=[ms_token],
-                num_sessions=1,
-                sleep_after=3,
-                headless=True,
-            )
+            await api.create_sessions(**session_kwargs)
 
-            if source_mode in ("url", "both"):
-                log(f"🎯 Scrape {len(video_urls)} URL video chỉ định...")
-                for url in video_urls:
+            # 1. URL mode (no WIN filter — user explicitly chose)
+            if sources["video_urls"]:
+                log(f"🎯 URL mode: {len(sources['video_urls'])} video")
+                for url in sources["video_urls"]:
                     vid = extract_video_id(url)
                     if not vid:
-                        log(f"  ⚠️ URL không hợp lệ: {url}")
+                        log(f"  ⚠️  URL không hợp lệ: {url}")
                         continue
                     try:
                         video = api.video(id=vid)
                         info = await video.info()
-                        meta = build_video_meta(info, source=f"url:{url[:60]}")
+                        meta = build_video_meta(info, source=f"url:{url[:50]}")
                         job["videos"].append(meta)
-                        log(f"  ✅ Video {vid}: {meta['play_count']:,} views | "
-                            f"engagement {meta['engagement_rate']}% | "
-                            f"comment {meta['comment_rate']}%")
+                        log(f"  ✅ {vid}: {meta['play_count']:,}v | eng {meta['engagement_rate']}%")
                         await _scrape_comments(video, meta, job, max_comments, log)
                     except Exception as e:
-                        log(f"  ❌ Lỗi video {vid}: {e}")
+                        log(f"  ❌ {vid}: {e}")
 
-            if source_mode in ("hashtag", "both"):
-                for tag in hashtags:
-                    log(f"🔍 Quét #{tag} (tối đa {max_videos} video)...")
-                    checked = 0
-                    won = 0
+            # 2. Hashtag mode
+            for tag in sources["hashtags"]:
+                log(f"🔍 #{tag} (max {max_videos})...")
+                await _scrape_videos_generator(
+                    api.hashtag(name=tag).videos(count=max_videos),
+                    f"#{tag}", max_comments, criteria, job, log,
+                )
+
+            # 3. User mode
+            for username in sources["usernames"]:
+                log(f"👤 @{username} (max {max_videos})...")
+                try:
+                    user = api.user(username=username)
                     try:
-                        async for video in api.hashtag(name=tag).videos(count=max_videos):
-                            d = video.as_dict
-                            stats = d.get("stats", {})
-                            checked += 1
-                            ok, reason = is_win_video(stats, criteria)
-                            if not ok:
-                                log(f"  ⏭️  Bỏ qua: {reason}")
-                                continue
-                            won += 1
-                            meta = build_video_meta(d, source=f"#{tag}")
-                            job["videos"].append(meta)
-                            log(f"  ✅ WIN video {won}: {meta['play_count']:,} views | "
-                                f"engagement {meta['engagement_rate']}% | "
-                                f"comment {meta['comment_rate']}%")
-                            await _scrape_comments(video, meta, job, max_comments, log)
-                        log(f"  📊 #{tag}: {won}/{checked} video đạt tiêu chí WIN")
-                    except Exception as e:
-                        log(f"❌ Lỗi #{tag}: {e}")
+                        uinfo = await user.info()
+                        if isinstance(uinfo, dict):
+                            ustats = uinfo.get("stats", {}) or uinfo.get("userInfo", {}).get("stats", {})
+                            if ustats:
+                                log(f"   ℹ️  {ustats.get('followerCount', 0):,} followers | "
+                                    f"{ustats.get('heartCount', 0):,} hearts")
+                    except Exception:
+                        pass
+                    await _scrape_videos_generator(
+                        user.videos(count=max_videos),
+                        f"@{username}", max_comments, criteria, job, log,
+                    )
+                except Exception as e:
+                    log(f"  ❌ @{username}: {e}")
+
+            # 4. Keyword search
+            for kw in sources["keywords"]:
+                log(f"🔎 search '{kw}' (max {max_videos})...")
+                try:
+                    await _scrape_videos_generator(
+                        api.search.videos(kw, count=max_videos),
+                        f"search:{kw[:30]}", max_comments, criteria, job, log,
+                    )
+                except Exception as e:
+                    log(f"  ❌ search '{kw}': {e}")
+
+            # 5. Related videos from seeds
+            for seed_url in sources["related_seeds"]:
+                vid = extract_video_id(seed_url)
+                if not vid:
+                    log(f"  ⚠️  Seed URL không hợp lệ: {seed_url}")
+                    continue
+                log(f"🌱 related từ seed {vid} (max {related_count})...")
+                try:
+                    seed = api.video(id=vid)
+                    await _scrape_videos_generator(
+                        seed.related_videos(count=related_count),
+                        f"related:{vid}", max_comments, criteria, job, log,
+                    )
+                except Exception as e:
+                    log(f"  ❌ related {vid}: {e}")
 
         job["status"] = "done"
         log(f"🎉 Hoàn tất! {len(job['videos'])} video WIN | {len(job['comments'])} comment")
@@ -381,6 +412,28 @@ async def _scrape_job(job_id, ms_token, source_mode, hashtags, video_urls,
         job["status"] = "error"
         job["error"] = str(e)
         log(f"❌ Lỗi nghiêm trọng: {e}")
+
+
+async def _scrape_videos_generator(video_iter, source_label, max_comments, criteria, job, log):
+    """Chung cho hashtag/user/keyword/related: filter WIN rồi scrape comment."""
+    checked = won = 0
+    try:
+        async for video in video_iter:
+            d = video.as_dict
+            stats = d.get("stats", {})
+            checked += 1
+            ok, reason = is_win_video(stats, criteria)
+            if not ok:
+                log(f"  ⏭️  {reason}")
+                continue
+            won += 1
+            meta = build_video_meta(d, source=source_label)
+            job["videos"].append(meta)
+            log(f"  ✅ WIN {won}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% | cmt {meta['comment_rate']}%")
+            await _scrape_comments(video, meta, job, max_comments, log)
+        log(f"  📊 {source_label}: {won}/{checked} WIN")
+    except Exception as e:
+        log(f"  ❌ {source_label}: {e}")
 
 
 async def _scrape_comments(video, meta, job, max_comments, log):
@@ -425,17 +478,15 @@ def _analyze_job(job_id):
                     views = int(r.get("play_count", 0))
                     likes = r.get("comment_likes", 0)
                     src = r.get("source", "")
-                    lines.append(f"[{src} | {views:,} views | {likes}❤️] {text}")
+                    lines.append(f"[{src} | {views:,}v | {likes}❤] {text}")
 
             result = call_ai(
-                provider=provider,
-                model=model,
-                api_key=api_key,
+                provider=provider, model=model, api_key=api_key,
                 system=SYSTEM_PROMPT,
-                user=f"""Phân tích batch {i}/{len(chunks)} comment TikTok gym/fitness (đã lọc video WIN).
-Trả lời bullet points ngắn gọn:
+                user=f"""Phân tích batch {i}/{len(chunks)} comment TikTok gym/fitness (đã lọc WIN).
+Bullet points ngắn gọn:
 • Pain points nổi bật
-• Emotion triggers (từ gây cảm xúc)
+• Emotion triggers
 • Câu hỏi hay gặp
 • Patterns engagement cao
 
@@ -447,27 +498,26 @@ Trả lời bullet points ngắn gọn:
 
         log("🎯 Tổng hợp báo cáo cuối...")
         total_videos = len(set(r.get("video_id", "") for r in comments))
+        sources_used = sorted(set(r.get("source", "") for r in comments))
 
         report = call_ai(
-            provider=provider,
-            model=model,
-            api_key=api_key,
+            provider=provider, model=model, api_key=api_key,
             system=SYSTEM_PROMPT,
-            user=f"""Tổng hợp insight từ {len(chunk_results)} batch phân tích.
-Dữ liệu: {len(comments)} comment | {total_videos} video gym/fitness TikTok (đã lọc WIN).
+            user=f"""Tổng hợp insight từ {len(chunk_results)} batch.
+Dữ liệu: {len(comments)} comment | {total_videos} video WIN | {len(sources_used)} nguồn ({', '.join(sources_used[:5])}{'...' if len(sources_used)>5 else ''})
 
-Viết báo cáo theo format:
+Format:
 
 # INSIGHT REPORT — GYMSTORE TIKTOK
-> Dữ liệu: {len(comments)} comment | {total_videos} video WIN | AI: {provider}/{model}
+> {len(comments)} comment | {total_videos} video WIN | AI: {provider}/{model}
 
-## 1. TOP PAIN POINTS (xếp theo mức độ phổ biến)
+## 1. TOP PAIN POINTS (xếp theo phổ biến)
 
 ## 2. EMOTION TRIGGERS PHỔ BIẾN
-(từ/cụm từ gây reaction mạnh, kèm ví dụ)
+(từ/cụm từ gây reaction mạnh + ví dụ)
 
 ## 3. GÓC CONTENT ĐANG WIN
-(kèm ví dụ comment minh họa thực tế)
+(kèm ví dụ comment thực tế)
 
 ## 4. HOOK IDEAS (5–8 hook dùng được luôn)
 
@@ -484,7 +534,6 @@ Viết báo cáo theo format:
         job["status"] = "analyzed"
         log("✅ Báo cáo hoàn tất!")
 
-        # Clear API key sau khi xong
         if "ai_config" in job:
             job["ai_config"]["api_key"] = "***cleared***"
 
