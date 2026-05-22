@@ -179,12 +179,14 @@ def start_scrape():
     # Proxy (optional)
     proxy_cfg = data.get("proxy") or {}
     proxies = []
+    proxy_country = ""
     if proxy_cfg.get("server", "").strip():
         proxies.append({
             "server": proxy_cfg["server"].strip(),
             "username": proxy_cfg.get("username", "").strip(),
             "password": proxy_cfg.get("password", "").strip(),
         })
+        proxy_country = proxy_cfg.get("country", "").strip().lower()
 
     # Sources
     sources_in = data.get("sources") or {}
@@ -223,7 +225,7 @@ def start_scrape():
 
     thread = threading.Thread(
         target=lambda: asyncio.run(_scrape_job(
-            job_id, ms_tokens, num_sessions, proxies, sources,
+            job_id, ms_tokens, num_sessions, proxies, proxy_country, sources,
             related_count, max_videos, max_comments, criteria,
         )),
         daemon=True,
@@ -306,7 +308,15 @@ def download(job_id, file_type):
 
 # ─── BACKGROUND TASKS ────────────────────────────────────────────────────────
 
-async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, sources,
+FLAG_MAP = {
+    "vn": "🇻🇳", "us": "🇺🇸", "uk": "🇬🇧", "sg": "🇸🇬", "jp": "🇯🇵", "kr": "🇰🇷",
+    "th": "🇹🇭", "id": "🇮🇩", "my": "🇲🇾", "ph": "🇵🇭", "tw": "🇹🇼", "hk": "🇭🇰",
+    "in": "🇮🇳", "au": "🇦🇺", "ca": "🇨🇦", "de": "🇩🇪", "fr": "🇫🇷", "nl": "🇳🇱",
+    "br": "🇧🇷", "mx": "🇲🇽",
+}
+
+
+async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, sources,
                        related_count, max_videos, max_comments, criteria):
     job = jobs[job_id]
 
@@ -316,8 +326,13 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, sources,
     try:
         log(f"⚙️  WIN: ≥{criteria['min_views']:,}v | eng ≥{criteria['min_engagement_rate']}% | "
             f"cmt ≥{criteria['min_comment_rate']}% | like ≥{criteria['min_like_rate']}%")
-        log(f"📡 Sessions: {num_sessions} | Tokens: {len(ms_tokens)} | "
-            f"Proxy: {'✓ ' + proxies[0]['server'] if proxies else '✗ direct'}")
+        if proxies:
+            flag = FLAG_MAP.get(proxy_country, "🌐")
+            label = proxy_country.upper() if proxy_country else "?"
+            proxy_str = f"✓ {flag} {label} via {proxies[0]['server']}"
+        else:
+            proxy_str = "✗ direct"
+        log(f"📡 Sessions: {num_sessions} | Tokens: {len(ms_tokens)} | Proxy: {proxy_str}")
 
         session_kwargs = {
             "ms_tokens": ms_tokens,

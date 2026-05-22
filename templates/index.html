@@ -209,35 +209,84 @@
         </div>
       </div>
 
-      <!-- ms_token -->
+      <!-- ms_tokens -->
       <div class="card p-5">
         <div class="section-label">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
           TikTok ms_tokens
+          <span class="ml-auto text-[10px] font-mono font-medium bg-muted text-muted-fg px-2 py-0.5 rounded-md normal-case tracking-normal" x-text="msTokenList.length + ' token'"></span>
         </div>
-        <textarea x-model="msTokens" @input.debounce.500ms="saveConfig()" rows="3" placeholder="Paste 1+ msToken (mỗi dòng 1 token)" class="input input-mono resize-none" :disabled="isRunning"></textarea>
-        <div class="mt-2 flex items-center justify-between">
-          <div class="text-[10.5px] text-muted-fg" x-text="msTokenList.length + ' token'"></div>
-          <details class="text-right">
-            <summary class="text-[11px] text-primary cursor-pointer hover:underline list-none flex items-center gap-1 inline-flex">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-              Lấy ở đâu?
-            </summary>
-            <div class="mt-3 space-y-3 text-left">
-              <div class="rounded-md border border-border p-3 bg-muted/50">
-                <div class="text-[12px] font-medium text-fg mb-2">Chrome/Brave/Edge (macOS)</div>
-                <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
-                  <li><code>tiktok.com</code> → đăng nhập</li>
-                  <li><kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → DevTools</li>
-                  <li>Tab <strong>Application</strong> → Cookies → tiktok.com</li>
-                  <li>Tìm <code>msToken</code> → copy Value</li>
-                </ol>
-              </div>
-              <div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
-                ⚠️ Token hết hạn sau vài giờ. Multi-session cần nhiều token từ nhiều tài khoản.
-              </div>
+
+        <textarea x-model="msTokens" @input.debounce.500ms="saveConfig()" rows="3" placeholder="msToken thứ nhất&#10;msToken thứ hai (nếu multi-session)&#10;..." class="input input-mono resize-none" :disabled="isRunning"></textarea>
+
+        <!-- Important callout -->
+        <div class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-3 py-2.5 text-[11px] text-blue-900 flex gap-2.5">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            <strong class="font-semibold">Có nhiều cookie tên <code class="bg-blue-100 px-1 rounded">msToken</code>?</strong> Chọn cái có:
+            <ul class="mt-1 space-y-0.5 list-disc list-inside ml-0.5">
+              <li>Domain = <code class="bg-blue-100 px-1 rounded">.tiktok.com</code> (có dấu chấm đầu)</li>
+              <li>Value dài nhất (~150 ký tự)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Browser guide tabs -->
+        <details class="mt-3" x-data="{ tab: 'mac-chrome' }">
+          <summary class="cursor-pointer select-none list-none">
+            <div class="flex items-center justify-between text-[11px] font-medium text-primary hover:underline">
+              <span class="flex items-center gap-1">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transition-transform"><polyline points="9 18 15 12 9 6"/></svg>
+                Hướng dẫn lấy msToken
+              </span>
             </div>
-          </details>
+          </summary>
+
+          <div class="mt-3">
+            <div class="seg mb-3">
+              <button @click="tab='mac-chrome'" :class="['seg-btn', tab==='mac-chrome' && 'active']">macOS · Chrome</button>
+              <button @click="tab='win-chrome'" :class="['seg-btn', tab==='win-chrome' && 'active']">Windows · Chrome</button>
+              <button @click="tab='safari'" :class="['seg-btn', tab==='safari' && 'active']">Safari</button>
+            </div>
+
+            <div x-show="tab==='mac-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Mở Chrome/Brave/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → DevTools</li>
+                <li>Tab <strong>Application</strong> (bấm <kbd>»</kbd> nếu ẩn)</li>
+                <li>Sidebar: <strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
+                <li>Tìm hàng Name = <code>msToken</code>, Domain = <code>.tiktok.com</code></li>
+                <li>Copy ô <strong>Value</strong></li>
+              </ol>
+            </div>
+
+            <div x-show="tab==='win-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Mở Chrome/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                <li>Nhấn <kbd>F12</kbd> hoặc <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></li>
+                <li>Tab <strong>Application</strong></li>
+                <li><strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
+                <li>Tìm <code>msToken</code> với Domain <code>.tiktok.com</code></li>
+                <li>Copy <strong>Value</strong></li>
+              </ol>
+            </div>
+
+            <div x-show="tab==='safari'" class="rounded-md border border-border bg-muted/30 p-3">
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Safari → Settings → <strong>Advanced</strong> → tick <em>"Show Develop menu"</em></li>
+                <li>Mở <code>tiktok.com</code> → đăng nhập</li>
+                <li>Menu <strong>Develop</strong> → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
+                <li>Tab <strong>Storage</strong> → Cookies → <code>tiktok.com</code></li>
+                <li>Tìm <code>msToken</code> Domain <code>.tiktok.com</code> → copy Value</li>
+              </ol>
+            </div>
+          </div>
+        </details>
+
+        <!-- Warnings -->
+        <div class="mt-3 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>Token hết hạn sau vài giờ → gặp lỗi auth thì lấy lại. <strong>Multi-session cần nhiều token từ nhiều tài khoản TikTok khác nhau</strong>.</div>
         </div>
       </div>
 
@@ -447,19 +496,49 @@
             <!-- Proxy -->
             <div class="border-t border-border pt-4">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-[11px] font-medium text-fg">HTTP Proxy</label>
+                <label class="text-[11px] font-medium text-fg flex items-center gap-2">
+                  HTTP Proxy
+                  <span x-show="!proxyEnabled" class="text-[10px] font-normal bg-muted text-muted-fg px-2 py-0.5 rounded-md">🌐 Direct</span>
+                  <span x-show="proxyEnabled && proxyCountry" class="text-[10px] font-normal bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-100">
+                    <span x-text="selectedCountryFlag"></span> <span x-text="selectedCountryLabel"></span>
+                  </span>
+                </label>
                 <label class="flex items-center gap-2 cursor-pointer">
                   <span class="text-[10.5px] text-muted-fg">Bật</span>
                   <input type="checkbox" x-model="proxyEnabled" @change="saveConfig()" class="accent-primary" />
                 </label>
               </div>
-              <div x-show="proxyEnabled" class="space-y-2" x-cloak>
-                <input x-model="proxyServer" @input.debounce.500ms="saveConfig()" type="text" placeholder="http://gate.smartproxy.com:7000" class="input input-mono" :disabled="isRunning" />
+
+              <div x-show="!proxyEnabled" x-cloak class="text-[11px] text-muted-fg rounded-md bg-muted/40 border border-border px-3 py-2">
+                Đang dùng IP máy chạy Flask. Bình thường ok, nhưng nếu scrape &gt; 1000 video/ngày dễ bị TikTok limit IP.
+              </div>
+
+              <div x-show="proxyEnabled" x-cloak class="space-y-2">
+                <!-- Country + server -->
+                <div class="grid grid-cols-12 gap-2">
+                  <select x-model="proxyCountry" @change="saveConfig()" :disabled="isRunning" class="input col-span-5">
+                    <template x-for="c in COUNTRIES" :key="c.code">
+                      <option :value="c.code" x-text="c.flag + ' ' + c.name"></option>
+                    </template>
+                  </select>
+                  <input x-model="proxyServer" @input.debounce.500ms="saveConfig()" type="text" placeholder="host:port hoặc URL" class="input input-mono col-span-7" :disabled="isRunning" />
+                </div>
+
+                <!-- Auth -->
                 <div class="grid grid-cols-2 gap-2">
                   <input x-model="proxyUsername" @input.debounce.500ms="saveConfig()" type="text" placeholder="username" class="input input-mono" :disabled="isRunning" />
-                  <input x-model="proxyPassword" @input.debounce.500ms="saveConfig()" :type="showProxyPass ? 'text' : 'password'" placeholder="password" class="input input-mono" :disabled="isRunning" />
+                  <div class="relative">
+                    <input x-model="proxyPassword" @input.debounce.500ms="saveConfig()" :type="showProxyPass ? 'text' : 'password'" placeholder="password" class="input input-mono pr-8" :disabled="isRunning" />
+                    <button @click="showProxyPass = !showProxyPass" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-0.5">
+                      <svg x-show="!showProxyPass" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg x-show="showProxyPass" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                    </button>
+                  </div>
                 </div>
-                <div class="text-[10.5px] text-muted-fg">Residential proxy đề xuất khi scrape lớn</div>
+
+                <div class="text-[10.5px] text-muted-fg leading-relaxed">
+                  Country chỉ để label cho dễ nhận diện. Routing thực tế phụ thuộc URL proxy provider cung cấp (vd: <code>us.smartproxy.com</code>, <code>vn-residential.brightdata.com</code>).
+                </div>
               </div>
             </div>
 
@@ -589,6 +668,30 @@
     const PLACEHOLDER_KEYS = { anthropic: 'sk-ant-api03-...', openai: 'sk-proj-...', gemini: 'AIzaSy...' };
     const KEY_LINKS = { anthropic: 'https://console.anthropic.com/settings/keys', openai: 'https://platform.openai.com/api-keys', gemini: 'https://aistudio.google.com/apikey' };
 
+    const COUNTRIES = [
+      { code: '',   flag: '🌐', name: 'Auto / Không chọn' },
+      { code: 'vn', flag: '🇻🇳', name: 'Vietnam' },
+      { code: 'us', flag: '🇺🇸', name: 'United States' },
+      { code: 'uk', flag: '🇬🇧', name: 'United Kingdom' },
+      { code: 'sg', flag: '🇸🇬', name: 'Singapore' },
+      { code: 'jp', flag: '🇯🇵', name: 'Japan' },
+      { code: 'kr', flag: '🇰🇷', name: 'South Korea' },
+      { code: 'th', flag: '🇹🇭', name: 'Thailand' },
+      { code: 'id', flag: '🇮🇩', name: 'Indonesia' },
+      { code: 'my', flag: '🇲🇾', name: 'Malaysia' },
+      { code: 'ph', flag: '🇵🇭', name: 'Philippines' },
+      { code: 'tw', flag: '🇹🇼', name: 'Taiwan' },
+      { code: 'hk', flag: '🇭🇰', name: 'Hong Kong' },
+      { code: 'in', flag: '🇮🇳', name: 'India' },
+      { code: 'au', flag: '🇦🇺', name: 'Australia' },
+      { code: 'ca', flag: '🇨🇦', name: 'Canada' },
+      { code: 'de', flag: '🇩🇪', name: 'Germany' },
+      { code: 'fr', flag: '🇫🇷', name: 'France' },
+      { code: 'nl', flag: '🇳🇱', name: 'Netherlands' },
+      { code: 'br', flag: '🇧🇷', name: 'Brazil' },
+      { code: 'mx', flag: '🇲🇽', name: 'Mexico' },
+    ];
+
     function app() {
       return {
         // AI
@@ -602,8 +705,10 @@
         msTokens: '',
         numSessions: 1,
         proxyEnabled: false,
+        proxyCountry: '',
         proxyServer: '', proxyUsername: '', proxyPassword: '',
         showProxyPass: false,
+        COUNTRIES,
 
         // Sources (5)
         useHashtags: true,
@@ -661,6 +766,11 @@
               || (this.useKeywords && this.keywords.length > 0)
               || (this.useRelated && this.relatedSeedList.length > 0);
         },
+        get selectedCountry() {
+          return COUNTRIES.find(c => c.code === this.proxyCountry) || COUNTRIES[0];
+        },
+        get selectedCountryFlag() { return this.selectedCountry.flag; },
+        get selectedCountryLabel() { return this.selectedCountry.code ? this.selectedCountry.name : 'Auto'; },
 
         init() {
           const saved = localStorage.getItem('ttr_config_v3');
@@ -717,7 +827,7 @@
           const snap = {};
           for (const k of [
             'provider', '_keys', '_models', '_modelLists',
-            'msTokens', 'numSessions', 'proxyEnabled', 'proxyServer', 'proxyUsername', 'proxyPassword',
+            'msTokens', 'numSessions', 'proxyEnabled', 'proxyCountry', 'proxyServer', 'proxyUsername', 'proxyPassword',
             'useHashtags', 'hashtags', 'useUrls', 'videoUrls',
             'useUsers', 'usernames', 'useKeywords', 'keywords',
             'useRelated', 'relatedSeeds', 'relatedCount',
@@ -767,7 +877,12 @@
             min_like_rate: this.minLikeRate,
           };
           if (this.proxyEnabled && this.proxyServer.trim()) {
-            body.proxy = { server: this.proxyServer, username: this.proxyUsername, password: this.proxyPassword };
+            body.proxy = {
+              server: this.proxyServer,
+              username: this.proxyUsername,
+              password: this.proxyPassword,
+              country: this.proxyCountry,
+            };
           }
 
           try {
