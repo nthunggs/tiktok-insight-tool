@@ -52,12 +52,14 @@ webapp/
 ## 4. Trạng thái hiện tại
 
 ### ✅ Đã hoàn thành
-- [x] Backend Flask + 5 endpoint REST
+- [x] Backend Flask + 6 endpoint REST
 - [x] Frontend UI hoàn chỉnh (shadcn-inspired design)
-- [x] Scraping theo hashtag với WIN filter
-- [x] Scraping theo URL video cụ thể
+- [x] **5 source modes**: hashtag, URL, user (@username), keyword search, related videos (seed expansion)
+- [x] **Multi-session** scraping (1-3 session song song, mỗi session 1 ms_token)
+- [x] **Proxy support** (HTTP/SOCKS proxy với user/pass)
+- [x] WIN filter áp dụng cho 4/5 mode (URL bypass)
 - [x] Multi-provider AI (Anthropic/OpenAI/Gemini) — fetch model list **trực tiếp từ API**
-- [x] Save config vào browser `localStorage`
+- [x] Save config vào browser `localStorage` (v3 schema)
 - [x] Live log realtime (polling 2s)
 - [x] Download CSV (raw comments) + Markdown (insight report)
 - [x] Hướng dẫn lấy `ms_token` cho macOS (Chrome/Safari)
