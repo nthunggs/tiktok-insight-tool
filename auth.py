@@ -192,12 +192,12 @@ def init_auth(app):
             return "Lark OAuth chưa cấu hình. Set LARK_APP_ID + LARK_APP_SECRET + LARK_REDIRECT_URI.", 500
         state = secrets.token_urlsafe(16)
         session["lark_oauth_state"] = state
-        # Request scopes: email + mobile + base info để hỗ trợ cả user chỉ có SĐT
+        # Không pass scope explicit — Lark dùng scopes đã configured trong app
+        # (tránh lỗi 20027 khi scope chưa được grant)
         params = urlencode({
             "app_id": app_id,
             "redirect_uri": redirect_uri,
             "state": state,
-            "scope": "contact:user.email:readonly contact:user.base:readonly contact:user.id:readonly",
         })
         return redirect(f"https://accounts.larksuite.com/open-apis/authen/v1/authorize?{params}")
 

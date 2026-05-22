@@ -148,6 +148,93 @@ def index():
     )
 
 
+@app.route("/api/mstoken/auto", methods=["POST"])
+@login_required
+def auto_fetch_mstoken():
+    """Tự launch CloakBrowser → visit tiktok.com → extract msToken từ cookies."""
+    data = request.json or {}
+    proxy_cfg = data.get("proxy") or {}
+    count = max(1, min(int(data.get("count", 1)), 3))  # 1-3 tokens
+
+    proxy_arg = None
+    if proxy_cfg.get("server", "").strip():
+        proxy_arg = {
+            "server": proxy_cfg["server"] if "://" in proxy_cfg["server"] else f"http://{proxy_cfg['server']}",
+            "username": proxy_cfg.get("username", ""),
+            "password": proxy_cfg.get("password", ""),
+        }
+
+    result = {}
+    def run():
+        try:
+            result.update(asyncio.run(_fetch_mstoken_async(proxy_arg, count)))
+        except Exception as e:
+            result["error"] = f"{type(e).__name__}: {e}"
+
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    t.join(timeout=120)
+    if not result:
+        return jsonify({"error": "Timeout sau 120s"}), 408
+    return jsonify(result)
+
+
+async def _fetch_mstoken_async(proxy_arg, count=1):
+    import cloakbrowser
+    from tiktok_scraper import BROWSER_DATA_DIR, get_country_profile
+
+    os.makedirs(BROWSER_DATA_DIR, exist_ok=True)
+    profile = get_country_profile(None)
+
+    ctx_kwargs = dict(
+        user_data_dir=BROWSER_DATA_DIR,
+        headless=True,
+        stealth_args=True,
+        humanize=False,
+        locale=profile["locale"],
+        timezone=profile["timezone"],
+    )
+    if proxy_arg:
+        ctx_kwargs["proxy"] = proxy_arg
+
+    tokens = []
+    try:
+        ctx = await cloakbrowser.launch_persistent_context_async(**ctx_kwargs)
+        try:
+            for i in range(count):
+                page = await ctx.new_page()
+                try:
+                    await page.goto("https://www.tiktok.com",
+                                     wait_until="domcontentloaded", timeout=30000)
+                    await asyncio.sleep(4 if i == 0 else 6)  # wait cookie rotate
+                    cookies = await ctx.cookies()
+                    ms = [c for c in cookies if c.get("name") == "msToken"]
+                    ms.sort(key=lambda c: len(c.get("value", "")), reverse=True)
+                    if ms:
+                        tok = ms[0]["value"]
+                        if tok and tok not in tokens:
+                            tokens.append(tok)
+                finally:
+                    await page.close()
+        finally:
+            await ctx.close()
+    except Exception as e:
+        return {"success": False, "error": f"{type(e).__name__}: {e}"}
+
+    if not tokens:
+        return {
+            "success": False,
+            "error": "Không tìm thấy cookie msToken sau khi visit tiktok.com",
+            "suggest": "TikTok có thể chặn IP/region. Thử bật proxy hoặc kiểm tra mạng.",
+        }
+    return {
+        "success": True,
+        "tokens": tokens,
+        "count": len(tokens),
+        "ms_token": tokens[0],  # legacy single token field
+    }
+
+
 @app.route("/api/test-scrape", methods=["POST"])
 @login_required
 def test_scrape_endpoint():
@@ -182,61 +269,92 @@ def test_scrape_endpoint():
 
 
 async def _test_scrape_async(ms_token, proxies):
-    browser = os.environ.get("TIKTOK_BROWSER", "webkit")
-    headless = os.environ.get("TIKTOK_HEADLESS", "true").lower() != "false"
+    """Test 1 video qua TikTokApi + CloakBrowser context."""
+    proxy_arg = None
+    proxy_country = None
+    if proxies:
+        p = proxies[0]
+        proxy_arg = {
+            "server": p["server"] if "://" in p["server"] else f"http://{p['server']}",
+            "username": p.get("username", ""),
+            "password": p.get("password", ""),
+        }
+
+    use_cloak = os.environ.get("TIKTOK_USE_CLOAK", "true").lower() == "true"
+
+    async def cloak_factory(playwright):
+        import cloakbrowser
+        from tiktok_scraper import get_country_profile, BROWSER_DATA_DIR
+        os.makedirs(BROWSER_DATA_DIR, exist_ok=True)
+        profile = get_country_profile(proxy_country)
+        cloak_kwargs = dict(
+            user_data_dir=BROWSER_DATA_DIR,
+            headless=os.environ.get("TIKTOK_HEADLESS", "true").lower() != "false",
+            stealth_args=True,
+            humanize=False,
+            locale=profile["locale"],
+            timezone=profile["timezone"],
+        )
+        if proxy_arg:
+            cloak_kwargs["proxy"] = proxy_arg
+        return await cloakbrowser.launch_persistent_context_async(**cloak_kwargs)
 
     session_kwargs = dict(
         ms_tokens=[ms_token], num_sessions=1,
-        sleep_after=2, headless=headless, browser=browser,
+        sleep_after=2, headless=True,
     )
     if proxies:
         session_kwargs["proxies"] = proxies
+    if use_cloak:
+        session_kwargs["browser_context_factory"] = cloak_factory
 
-    async with TikTokApi() as api:
-        await api.create_sessions(**session_kwargs)
-        try:
-            async for video in api.hashtag(name="fyp").videos(count=1):
-                d = video.as_dict
-                stats = d.get("stats", {})
-                sample = {
-                    "video_id": d.get("id"),
-                    "views": stats.get("playCount", 0),
-                    "likes": stats.get("diggCount", 0),
-                    "author": d.get("author", {}).get("uniqueId"),
-                    "desc": (d.get("desc") or "")[:80],
-                }
-                # Test comments
-                cmt_count = 0
-                cmt_err = None
-                try:
-                    async for cmt in video.comments(count=5):
-                        cmt_count += 1
-                except Exception as e:
-                    cmt_err = str(e)
-                sample["comments_fetched"] = cmt_count
-
-                if cmt_err or cmt_count == 0:
-                    return {
-                        "success": False,
-                        "stage": "comments",
-                        "video": sample,
-                        "error": cmt_err or "Comment API trả empty (bị block)",
-                        "suggest": "TikTok detect bot ở Comment API. Thử: 1) đổi msToken mới 2) bật proxy residential 3) headless=False",
+    try:
+        async with TikTokApi() as api:
+            await api.create_sessions(**session_kwargs)
+            try:
+                async for video in api.hashtag(name="fyp").videos(count=1):
+                    d = video.as_dict
+                    stats = d.get("stats", {})
+                    sample = {
+                        "video_id": d.get("id"),
+                        "views": stats.get("playCount", 0),
+                        "likes": stats.get("diggCount", 0),
+                        "author": d.get("author", {}).get("uniqueId"),
+                        "desc": (d.get("desc") or "")[:80],
                     }
-                return {"success": True, "video": sample}
-            return {
-                "success": False,
-                "stage": "list",
-                "error": "TikTok không trả về video nào từ #fyp",
-                "suggest": "msToken có thể sai/hết hạn/region mismatch với IP. Lấy lại msToken mới.",
-            }
-        except Exception as e:
-            return {
-                "success": False,
-                "stage": "session",
-                "error": f"{type(e).__name__}: {e}",
-                "suggest": "Session bị reject. Kiểm tra msToken còn hạn không, proxy có hoạt động không.",
-            }
+                    cmt_count = 0
+                    cmt_err = None
+                    try:
+                        async for cmt in video.comments(count=5):
+                            cmt_count += 1
+                    except Exception as e:
+                        cmt_err = str(e)
+                    sample["comments_fetched"] = cmt_count
+
+                    if cmt_err or cmt_count == 0:
+                        return {
+                            "success": False, "stage": "comments", "video": sample,
+                            "error": cmt_err or "Comment API trả empty",
+                            "suggest": "Comment bị block. Thử: msToken mới, proxy residential, hoặc TIKTOK_USE_CLOAK=false để debug.",
+                        }
+                    return {"success": True, "video": sample}
+                return {
+                    "success": False, "stage": "list",
+                    "error": "TikTok không trả về video nào từ #fyp",
+                    "suggest": "msToken sai/hết hạn/region mismatch. Lấy msToken mới.",
+                }
+            except Exception as e:
+                return {
+                    "success": False, "stage": "session",
+                    "error": f"{type(e).__name__}: {e}",
+                    "suggest": "Session bị reject. Verify msToken + proxy + CloakBrowser binary.",
+                }
+    except Exception as e:
+        return {
+            "success": False, "stage": "session",
+            "error": f"{type(e).__name__}: {e}",
+            "suggest": "Setup session fail. Check CloakBrowser binary có tải về chưa.",
+        }
 
 
 @app.route("/api/proxy/check", methods=["POST"])
@@ -489,6 +607,38 @@ FLAG_MAP = {
 }
 
 
+def _scraper_to_meta(v: dict, source: str) -> dict:
+    """Convert tiktok_scraper format → existing build_video_meta format."""
+    stats = {
+        "playCount": v.get("views", 0),
+        "diggCount": v.get("likes", 0),
+        "commentCount": v.get("comments_count", 0),
+        "shareCount": v.get("shares", 0),
+    }
+    rates = calc_engagement(stats)
+    return {
+        "video_id": v.get("video_id", ""),
+        "source": source,
+        "desc": (v.get("description", "") or "").replace("\n", " ")[:200],
+        "author": v.get("author_username", ""),
+        "play_count": stats["playCount"],
+        "like_count": stats["diggCount"],
+        "comment_count": stats["commentCount"],
+        "share_count": stats["shareCount"],
+        **rates,
+        "url": v.get("url", ""),
+    }
+
+
+def _scraper_stats(v: dict) -> dict:
+    return {
+        "playCount": v.get("views", 0),
+        "diggCount": v.get("likes", 0),
+        "commentCount": v.get("comments_count", 0),
+        "shareCount": v.get("shares", 0),
+    }
+
+
 async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, sources,
                        related_count, max_videos, max_comments, criteria):
     job = jobs[job_id]
@@ -503,25 +653,60 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
             flag = FLAG_MAP.get(proxy_country, "🌐")
             label = proxy_country.upper() if proxy_country else "?"
             proxy_str = f"✓ {flag} {label} via {proxies[0]['server']}"
+            proxy_arg = {
+                "server": proxies[0]["server"] if "://" in proxies[0]["server"]
+                          else f"http://{proxies[0]['server']}",
+                "username": proxies[0].get("username", ""),
+                "password": proxies[0].get("password", ""),
+            }
         else:
             proxy_str = "✗ direct"
-        log(f"📡 Sessions: {num_sessions} | Tokens: {len(ms_tokens)} | Proxy: {proxy_str}")
+            proxy_arg = None
 
-        browser = os.environ.get("TIKTOK_BROWSER", "webkit")  # webkit < chromium for bot detect
-        headless = os.environ.get("TIKTOK_HEADLESS", "true").lower() != "false"
-        sleep_after = int(os.environ.get("TIKTOK_SLEEP_AFTER", "5"))
+        engine_channel = os.environ.get("TIKTOK_CHANNEL", "chrome")
+        engine_headless = os.environ.get("TIKTOK_HEADLESS", "false").lower() == "true"
+        log(f"📡 Engine: Playwright + persistent context | channel={engine_channel or 'chromium'} | headless={engine_headless} | Proxy: {proxy_str}")
+        if proxy_country:
+            log(f"🌍 Browser locale + timezone tự match country: {FLAG_MAP.get(proxy_country, '🌐')} {proxy_country.upper()}")
+        else:
+            log("🌍 Browser locale: 🇻🇳 vi-VN (default, không có proxy country)")
+        log(f"🔑 ms_tokens: {len(ms_tokens)} (engine dùng token đầu tiên, multi-session sẽ wire sau)")
+
+        # ─── TikTokApi engine + CloakBrowser context factory (anti-detect mạnh) ───
+        use_cloak = os.environ.get("TIKTOK_USE_CLOAK", "true").lower() == "true"
+
+        async def cloak_factory(playwright):
+            """Factory: TikTokApi sẽ dùng context này thay vì Chromium bundled."""
+            import cloakbrowser
+            from tiktok_scraper import get_country_profile, BROWSER_DATA_DIR
+            os.makedirs(BROWSER_DATA_DIR, exist_ok=True)
+            profile = get_country_profile(proxy_country)
+            cloak_kwargs = dict(
+                user_data_dir=BROWSER_DATA_DIR,
+                headless=os.environ.get("TIKTOK_HEADLESS", "true").lower() != "false",
+                stealth_args=True,
+                humanize=os.environ.get("TIKTOK_HUMANIZE", "false").lower() == "true",
+                locale=profile["locale"],
+                timezone=profile["timezone"],
+            )
+            if proxy_arg:
+                cloak_kwargs["proxy"] = proxy_arg
+            return await cloakbrowser.launch_persistent_context_async(**cloak_kwargs)
 
         session_kwargs = {
             "ms_tokens": ms_tokens,
             "num_sessions": num_sessions,
-            "sleep_after": sleep_after,
-            "headless": headless,
-            "browser": browser,
+            "sleep_after": 3,
+            "headless": True,  # ignored khi browser_context_factory được set
         }
         if proxies:
             session_kwargs["proxies"] = proxies
-
-        log(f"🌐 Browser: {browser} | headless: {headless} | sleep_after: {sleep_after}s")
+        if use_cloak:
+            session_kwargs["browser_context_factory"] = cloak_factory
+            log(f"🥷 Engine: TikTokApi + CloakBrowser (58 anti-detect patches, prevents captcha)")
+        else:
+            log(f"📡 Engine: TikTokApi + Playwright Chromium bundled")
+        log(f"🔑 ms_tokens: {len(ms_tokens)} | Sessions: {num_sessions} | Proxy: {proxy_str}")
 
         async with TikTokApi() as api:
             await api.create_sessions(**session_kwargs)
@@ -584,7 +769,7 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
                 except Exception as e:
                     log(f"  ❌ search '{kw}': {e}")
 
-            # 5. Related videos from seeds
+            # 5. Related videos
             for seed_url in sources["related_seeds"]:
                 vid = extract_video_id(seed_url)
                 if not vid:
@@ -646,6 +831,72 @@ async def _scrape_comments(video, meta, job, max_comments, log):
         log(f"      💬 {count} comment")
     except Exception as e:
         log(f"      ⚠️ Comment error: {e}")
+
+
+async def _process_videos_shared(videos, source_label, criteria, job, log, comments_fn):
+    """Filter WIN + dùng comments_fn (shared context tab) lấy comment."""
+    checked = won = 0
+    for v in videos:
+        checked += 1
+        stats = _scraper_stats(v)
+        ok, reason = is_win_video(stats, criteria)
+        if not ok:
+            log(f"  ⏭️  v{checked} ({stats['playCount']:,}v): {reason}")
+            continue
+        won += 1
+        meta = _scraper_to_meta(v, source_label)
+        job["videos"].append(meta)
+        log(f"  ✅ WIN {won}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% | cmt {meta['comment_rate']}%")
+        n = await comments_fn(meta)
+        log(f"      💬 {n} comment")
+
+    if checked == 0:
+        log(f"  ⚠️  {source_label}: KHÔNG có video nào trả về")
+    elif won == 0:
+        log(f"  ⚠️  {source_label}: {checked} video đều bị filter bởi WIN criteria → hạ ngưỡng xuống")
+    else:
+        log(f"  📊 {source_label}: {won}/{checked} WIN")
+
+
+async def _process_scraped_videos(videos, source_label, max_comments, criteria,
+                                    job, log, ms_token, proxy_arg, country=None):
+    """Filter WIN + scrape comment cho mỗi video pass."""
+    checked = won = 0
+    for v in videos:
+        checked += 1
+        stats = _scraper_stats(v)
+        ok, reason = is_win_video(stats, criteria)
+        views = stats["playCount"]
+        if not ok:
+            log(f"  ⏭️  v{checked} ({views:,}v): {reason}")
+            continue
+        won += 1
+        meta = _scraper_to_meta(v, source_label)
+        job["videos"].append(meta)
+        log(f"  ✅ WIN {won}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% | cmt {meta['comment_rate']}%")
+
+        # Scrape comments cho video này
+        if meta["url"]:
+            cres = await crawl_video_comments(meta["url"], limit=max_comments,
+                                                ms_token=ms_token, proxy=proxy_arg, country=country)
+            if cres["success"]:
+                for c in cres["data"]:
+                    job["comments"].append({
+                        **meta,
+                        "comment_text": (c.get("text", "") or "").replace("\n", " "),
+                        "comment_likes": c.get("likes", 0),
+                        "comment_user": c.get("author_username", ""),
+                    })
+                log(f"      💬 {len(cres['data'])} comment")
+            else:
+                log(f"      ⚠️ Comment error: {cres.get('error')}")
+
+    if checked == 0:
+        log(f"  ⚠️  {source_label}: KHÔNG có video nào trả về")
+    elif won == 0:
+        log(f"  ⚠️  {source_label}: {checked} video đều bị filter bởi WIN criteria → hạ ngưỡng xuống")
+    else:
+        log(f"  📊 {source_label}: {won}/{checked} WIN")
 
 
 def _analyze_job(job_id):

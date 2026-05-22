@@ -39,6 +39,10 @@ logs/
 .playwright/
 playwright-report/
 test-results/
+browser_profile/
+
+# CloakBrowser binary cache (~200MB, user home)
+.cloakbrowser/
 
 # Claude Code
 .claude/settings.local.json

@@ -320,6 +320,21 @@
 
         <textarea x-model="msTokens" @input.debounce.500ms="saveConfig()" rows="3" placeholder="msToken thứ nhất&#10;msToken thứ hai (nếu multi-session)&#10;..." class="input input-mono resize-none" :disabled="isRunning"></textarea>
 
+        <!-- Auto fetch msToken -->
+        <div class="mt-2 flex items-center gap-2">
+          <button @click="autoFetchToken(numSessions || 1)" :disabled="autoFetchingToken || isRunning"
+                  class="text-[11px] font-semibold px-3 py-1.5 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap">
+            <svg x-show="!autoFetchingToken" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+            <svg x-show="autoFetchingToken" class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/>
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <span x-text="autoFetchingToken ? 'Đang lấy...' : '🔄 Auto lấy msToken'"></span>
+          </button>
+          <span class="text-[10.5px] text-muted-fg">Tự visit tiktok.com qua proxy hiện tại</span>
+        </div>
+        <div x-show="autoTokenMsg" x-cloak class="mt-1 text-[11px]" :class="autoTokenError ? 'text-red-600' : 'text-emerald-600'" x-text="autoTokenMsg"></div>
+
         <!-- Region + Test bar -->
         <div class="mt-2.5 grid grid-cols-[1fr_auto] gap-2">
           <div class="flex items-center gap-1.5">
@@ -877,6 +892,16 @@
       { code: 'mx', flag: '🇲🇽', name: 'Mexico' },
     ];
 
+    // Override fetch to skip ngrok free browser warning banner
+    const _origFetch = window.fetch;
+    window.fetch = (url, opts = {}) => {
+      opts.headers = {
+        'ngrok-skip-browser-warning': 'true',
+        ...(opts.headers || {}),
+      };
+      return _origFetch(url, opts);
+    };
+
     function app() {
       return {
         // AI
@@ -914,6 +939,9 @@
         testingScrape: false,
         testResult: null,
         testError: '',
+        autoFetchingToken: false,
+        autoTokenMsg: '',
+        autoTokenError: false,
 
         // Sources (5)
         useHashtags: true,
@@ -1150,6 +1178,47 @@
           // Convert ISO country code to flag emoji via regional indicator symbols
           return String.fromCodePoint(...[...c].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
         },
+        async autoFetchToken(count = 1) {
+          this.autoFetchingToken = true;
+          this.autoTokenMsg = '';
+          this.autoTokenError = false;
+          try {
+            const body = { count };
+            if (this.proxyEnabled && this.proxyServer.trim()) {
+              body.proxy = {
+                server: this.proxyServer,
+                username: this.proxyUsername,
+                password: this.proxyPassword,
+              };
+            }
+            const res = await fetch('/api/mstoken/auto', {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error) {
+              this.autoTokenError = true;
+              this.autoTokenMsg = `❌ ${data.error}` + (data.suggest ? ` — ${data.suggest}` : '');
+              return;
+            }
+            const tokens = data.tokens || [data.ms_token].filter(Boolean);
+            if (tokens.length === 0) {
+              this.autoTokenError = true;
+              this.autoTokenMsg = '❌ Không lấy được token nào';
+              return;
+            }
+            // Paste tokens vào textarea (replace toàn bộ)
+            this.msTokens = tokens.join('\n');
+            this.saveConfig();
+            this.autoTokenMsg = `✓ Đã lấy ${tokens.length} msToken (${tokens[0].length} ký tự mỗi token)`;
+          } catch(e) {
+            this.autoTokenError = true;
+            this.autoTokenMsg = `❌ ${e.message}`;
+          } finally {
+            this.autoFetchingToken = false;
+          }
+        },
+
         async testScrape() {
           this.testingScrape = true;
           this.testResult = null;
