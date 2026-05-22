@@ -71,8 +71,8 @@ def _bootstrap_admin() -> None:
         print(f"[auth] Bootstrapped admin: {email}")
     else:
         # Default admin nếu chưa setup gì cả
-        default_email = "admin@gymstore.local"
-        default_password = "gymstore2026"
+        default_email = "admin@example.local"
+        default_password = "changeme123"
         users.append({
             "email": default_email,
             "password_hash": generate_password_hash(default_password),

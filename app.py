@@ -42,8 +42,9 @@ app = Flask(__name__)
 init_auth(app)
 jobs: dict = {}
 
-SYSTEM_PROMPT = """Bạn là chuyên gia phân tích content marketing cho thị trường fitness/gym Việt Nam.
-Nhiệm vụ: phân tích comment TikTok để tìm insight và góc content đang "win" cho sản phẩm Gymstore."""
+# Có thể override qua env AI_SYSTEM_PROMPT
+SYSTEM_PROMPT = os.environ.get("AI_SYSTEM_PROMPT") or """Bạn là chuyên gia phân tích content marketing trên TikTok.
+Nhiệm vụ: phân tích comment TikTok để tìm insight và góc content đang "win" — pain points, emotion triggers, hook ideas, key message, điều nên tránh."""
 
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -702,7 +703,7 @@ Dữ liệu: {len(comments)} comment | {total_videos} video WIN | {len(sources_u
 
 Format:
 
-# INSIGHT REPORT — GYMSTORE TIKTOK
+# INSIGHT REPORT — TIKTOK
 > {len(comments)} comment | {total_videos} video WIN | AI: {provider}/{model}
 
 ## 1. TOP PAIN POINTS (xếp theo phổ biến)
@@ -715,7 +716,7 @@ Format:
 
 ## 4. HOOK IDEAS (5–8 hook dùng được luôn)
 
-## 5. KEY MESSAGE CHO GYMSTORE
+## 5. KEY MESSAGE
 
 ## 6. NÊN TRÁNH
 
