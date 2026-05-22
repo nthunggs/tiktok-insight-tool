@@ -1,4 +1,4 @@
-# TikTok Research Tool — Gymstore
+# Tiktok Insight V1 — Gymstore
 
 Tool thu thập comment TikTok theo hashtag và phân tích insight content "win" bằng Claude.
 

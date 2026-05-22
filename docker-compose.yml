@@ -1,11 +1,27 @@
 services:
   tiktok-research:
     build: .
-    platform: linux/arm64
+    container_name: tiktok-research
+    # platform omitted: build for native arch (x86_64 on Hetzner, arm64 on NAS)
     ports:
       - "5001:5001"
+    env_file:
+      - .env
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - PORT=5001
+      - PYTHONUNBUFFERED=1
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      # Persist user data + sessions across container rebuilds
+      - ./users.json:/app/users.json
+      - ./data:/app/data
     restart: unless-stopped
-    mem_limit: 800m
+    mem_limit: 900m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/login')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

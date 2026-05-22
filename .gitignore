@@ -11,8 +11,11 @@ env/
 # Environment & secrets
 .env
 .env.local
+.env.nas
+.env.hetzner
 *.key
 secrets/
+users.json
 
 # Output data
 *.csv

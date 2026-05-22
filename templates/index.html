@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TikTok Research</title>
+  <title>Tiktok Insight V1</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,227 +16,90 @@
 
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-          },
-          colors: {
-            border:  'hsl(240 5.9% 90%)',
-            input:   'hsl(240 5.9% 90%)',
-            ring:    'hsl(221 83% 53%)',
-            bg:      'hsl(0 0% 100%)',
-            fg:      'hsl(240 10% 3.9%)',
-            muted:       { DEFAULT: 'hsl(240 4.8% 95.9%)', fg: 'hsl(240 3.8% 46.1%)' },
-            primary:     { DEFAULT: 'hsl(221 83% 53%)',    fg: 'hsl(0 0% 100%)' },
-            accent:      { DEFAULT: 'hsl(240 4.8% 95.9%)', fg: 'hsl(240 10% 3.9%)' },
-            destructive: { DEFAULT: 'hsl(0 84% 60%)',      fg: 'hsl(0 0% 98%)' },
-          },
-        }
-      }
+      theme: { extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'], mono: ['JetBrains Mono', 'ui-monospace', 'monospace'] },
+        colors: {
+          border:  'hsl(240 5.9% 90%)',
+          bg:      'hsl(0 0% 100%)',
+          fg:      'hsl(240 10% 3.9%)',
+          muted:       { DEFAULT: 'hsl(240 4.8% 95.9%)', fg: 'hsl(240 3.8% 46.1%)' },
+          primary:     { DEFAULT: 'hsl(221 83% 53%)',    fg: 'hsl(0 0% 100%)' },
+          destructive: { DEFAULT: 'hsl(0 84% 60%)',      fg: 'hsl(0 0% 98%)' },
+        },
+      } }
     }
   </script>
 
   <style>
     :root { font-family: 'Inter', system-ui, sans-serif; }
-    body {
-      font-feature-settings: 'cv11', 'ss01', 'ss03';
-      background: hsl(240 5% 98%);
-      color: hsl(240 10% 3.9%);
-      -webkit-font-smoothing: antialiased;
-    }
+    body { font-feature-settings: 'cv11', 'ss01', 'ss03'; background: hsl(240 5% 98%); color: hsl(240 10% 3.9%); -webkit-font-smoothing: antialiased; }
     [x-cloak] { display: none !important; }
 
-    /* Card primitive */
-    .card {
-      background: white;
-      border: 1px solid hsl(240 5.9% 90%);
-      border-radius: 10px;
-    }
-
-    /* Input primitive */
-    .input {
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 13px;
-      background: white;
-      border: 1px solid hsl(240 5.9% 90%);
-      border-radius: 8px;
-      color: hsl(240 10% 3.9%);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .input:focus {
-      outline: none;
-      border-color: hsl(221 83% 53%);
-      box-shadow: 0 0 0 3px hsl(221 83% 53% / 0.15);
-    }
+    .card { background: white; border: 1px solid hsl(240 5.9% 90%); border-radius: 10px; }
+    .input { width: 100%; padding: 8px 12px; font-size: 13px; background: white; border: 1px solid hsl(240 5.9% 90%); border-radius: 8px; color: hsl(240 10% 3.9%); transition: border-color 0.15s, box-shadow 0.15s; }
+    .input:focus { outline: none; border-color: hsl(221 83% 53%); box-shadow: 0 0 0 3px hsl(221 83% 53% / 0.15); }
     .input::placeholder { color: hsl(240 3.8% 60%); }
+    .input-mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
 
-    .input-mono {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-    }
-
-    /* Button primitives */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 6px;
-      padding: 8px 14px;
-      font-size: 13px; font-weight: 500;
-      border-radius: 8px;
-      transition: all 0.12s;
-      cursor: pointer;
-      white-space: nowrap;
-    }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500; border-radius: 8px; transition: all 0.12s; cursor: pointer; white-space: nowrap; }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-
-    .btn-primary {
-      background: hsl(240 10% 3.9%);
-      color: white;
-      border: 1px solid hsl(240 10% 3.9%);
-    }
+    .btn-primary { background: hsl(240 10% 3.9%); color: white; border: 1px solid hsl(240 10% 3.9%); }
     .btn-primary:hover:not(:disabled) { background: hsl(240 6% 15%); }
-
-    .btn-accent {
-      background: hsl(221 83% 53%);
-      color: white;
-      border: 1px solid hsl(221 83% 53%);
-    }
+    .btn-accent { background: hsl(221 83% 53%); color: white; border: 1px solid hsl(221 83% 53%); }
     .btn-accent:hover:not(:disabled) { background: hsl(221 83% 47%); }
-
-    .btn-ghost {
-      background: white;
-      color: hsl(240 10% 3.9%);
-      border: 1px solid hsl(240 5.9% 90%);
-    }
+    .btn-ghost { background: white; color: hsl(240 10% 3.9%); border: 1px solid hsl(240 5.9% 90%); }
     .btn-ghost:hover:not(:disabled) { background: hsl(240 4.8% 95.9%); }
-
     .btn-icon { padding: 6px; }
 
-    /* Provider radio cards */
-    .provider-card {
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 8px;
-      background: white;
-      border: 1px solid hsl(240 5.9% 90%);
-      border-radius: 9px;
-      cursor: pointer;
-      transition: all 0.12s;
-      position: relative;
-    }
+    .provider-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; background: white; border: 1px solid hsl(240 5.9% 90%); border-radius: 9px; cursor: pointer; transition: all 0.12s; position: relative; }
     .provider-card:hover { background: hsl(240 4.8% 96.5%); }
-    .provider-card.active {
-      border-color: hsl(240 10% 3.9%);
-      background: hsl(240 5% 98%);
-      box-shadow: 0 0 0 1px hsl(240 10% 3.9%) inset;
-    }
+    .provider-card.active { border-color: hsl(240 10% 3.9%); background: hsl(240 5% 98%); box-shadow: 0 0 0 1px hsl(240 10% 3.9%) inset; }
     .provider-card svg { width: 18px; height: 18px; }
     .provider-card .name { font-size: 11px; font-weight: 500; color: hsl(240 6% 25%); }
-    .provider-card .check {
-      position: absolute; top: 6px; right: 6px;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: hsl(240 10% 3.9%); color: white;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .provider-card .check { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 50%; background: hsl(240 10% 3.9%); color: white; display: flex; align-items: center; justify-content: center; }
 
-    /* Tag pills */
-    .tag {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: hsl(240 4.8% 95.9%);
-      color: hsl(240 6% 25%);
-      border-radius: 999px;
-      padding: 3px 10px;
-      font-size: 12px; font-weight: 500;
-      border: 1px solid transparent;
-    }
+    .tag { display: inline-flex; align-items: center; gap: 4px; background: hsl(240 4.8% 95.9%); color: hsl(240 6% 25%); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 500; }
     .tag button { color: hsl(240 4% 46%); }
     .tag button:hover { color: hsl(0 84% 60%); }
 
-    /* Tab group (segmented control) */
-    .seg {
-      display: flex;
-      background: hsl(240 4.8% 95.9%);
-      border-radius: 8px;
-      padding: 3px;
-      gap: 2px;
-    }
-    .seg-btn {
-      flex: 1;
-      padding: 6px 10px;
-      font-size: 12px; font-weight: 500;
-      border-radius: 6px;
-      color: hsl(240 4% 46%);
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .seg-btn:hover { color: hsl(240 6% 25%); }
-    .seg-btn.active {
+    /* Source toggle row */
+    .source-row {
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 9px;
+      transition: all 0.15s;
+      overflow: hidden;
       background: white;
-      color: hsl(240 10% 3.9%);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     }
+    .source-row.active { border-color: hsl(240 10% 30%); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .source-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+    .source-header:hover { background: hsl(240 5% 98%); }
+    .source-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; background: hsl(240 4.8% 95.9%); color: hsl(240 6% 30%); flex-shrink: 0; }
+    .source-row.active .source-icon { background: hsl(240 10% 3.9%); color: white; }
+    .source-title { font-size: 13px; font-weight: 600; color: hsl(240 10% 3.9%); }
+    .source-sub { font-size: 11px; color: hsl(240 4% 46%); margin-top: 1px; }
+    .source-content { padding: 0 14px 14px; }
+    .toggle { width: 32px; height: 18px; border-radius: 999px; background: hsl(240 5.9% 85%); position: relative; transition: background 0.15s; flex-shrink: 0; }
+    .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .source-row.active .toggle { background: hsl(221 83% 53%); }
+    .source-row.active .toggle::after { transform: translateX(14px); }
 
-    /* Range slider */
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      background: hsl(240 5.9% 90%);
-      border-radius: 999px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 14px; height: 14px;
-      background: hsl(240 10% 3.9%);
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
+    input[type="range"] { -webkit-appearance: none; width: 100%; height: 4px; background: hsl(240 5.9% 90%); border-radius: 999px; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: hsl(240 10% 3.9%); border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     input[type="range"]:disabled::-webkit-slider-thumb { background: hsl(240 4% 65%); }
 
-    /* Section label */
-    .section-label {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: 600; color: hsl(240 10% 3.9%);
-      text-transform: uppercase; letter-spacing: 0.04em;
-      margin-bottom: 12px;
-    }
+    .section-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: hsl(240 10% 3.9%); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
     .section-label svg { width: 14px; height: 14px; color: hsl(240 4% 46%); }
 
-    /* Code style */
-    kbd {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      padding: 1.5px 5px;
-      background: white;
-      border: 1px solid hsl(240 5.9% 85%);
-      border-bottom-width: 2px;
-      border-radius: 4px;
-      color: hsl(240 6% 25%);
-    }
+    kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 1.5px 5px; background: white; border: 1px solid hsl(240 5.9% 85%); border-bottom-width: 2px; border-radius: 4px; color: hsl(240 6% 25%); }
 
-    /* Status dot */
     .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
     .pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    /* Log box */
-    .log-box {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      line-height: 1.65;
-      background: hsl(240 10% 3.9%);
-      color: hsl(240 5% 84%);
-    }
+    .log-box { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.65; background: hsl(240 10% 3.9%); color: hsl(240 5% 84%); }
     .log-box::-webkit-scrollbar { width: 8px; }
-    .log-box::-webkit-scrollbar-track { background: transparent; }
     .log-box::-webkit-scrollbar-thumb { background: hsl(240 5% 25%); border-radius: 4px; }
 
-    /* Report styles */
     .report h1 { font-size: 22px; font-weight: 700; margin: 16px 0 8px; letter-spacing: -0.02em; color: hsl(240 10% 3.9%); }
     .report h2 { font-size: 16px; font-weight: 600; margin: 18px 0 6px; color: hsl(221 83% 30%); padding-bottom: 6px; border-bottom: 1px solid hsl(221 83% 90%); }
     .report h3 { font-size: 14px; font-weight: 600; margin: 12px 0 4px; color: hsl(240 6% 15%); }
@@ -246,30 +110,35 @@
     .report strong { color: hsl(240 10% 3.9%); font-weight: 600; }
     .report code { background: hsl(240 4.8% 95.9%); padding: 1.5px 5px; border-radius: 4px; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; }
 
-    /* Stat */
     .stat-num { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: hsl(240 10% 3.9%); }
     .stat-label { font-size: 10.5px; color: hsl(240 4% 46%); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
   </style>
 </head>
 <body>
 
-  <!-- ─── HEADER ─── -->
+  <!-- HEADER -->
   <header class="border-b border-border bg-white sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-5 h-14 flex items-center gap-3">
-      <div class="w-7 h-7 rounded-md bg-fg flex items-center justify-center text-white">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+      <!-- TikTok logo với hiệu ứng cyan/pink offset -->
+      <div class="relative w-7 h-7 flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="absolute w-6 h-6" style="color:#25F4EE; transform: translate(-1.5px, 1px); mix-blend-mode: screen;">
+          <path fill="currentColor" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" class="absolute w-6 h-6" style="color:#FE2C55; transform: translate(1.5px, -1px); mix-blend-mode: screen;">
+          <path fill="currentColor" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" class="relative w-6 h-6">
+          <path fill="#000" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z"/>
+        </svg>
       </div>
       <div class="flex flex-col leading-tight">
-        <span class="text-sm font-semibold text-fg">TikTok Research</span>
+        <span class="text-sm font-semibold text-fg">Tiktok Insight V1</span>
         <span class="text-[11px] text-muted-fg">Comment scraper & insight analyzer</span>
       </div>
 
       <div class="ml-auto flex items-center gap-3">
         <div x-show="provider && apiKey" class="hidden md:flex items-center gap-1.5 text-[11px] text-muted-fg bg-muted px-2.5 py-1 rounded-md">
-          <span class="dot" :class="{
-                'bg-orange-500': provider === 'anthropic',
-                'bg-emerald-500': provider === 'openai',
-                'bg-blue-500': provider === 'gemini' }"></span>
+          <span class="dot" :class="{ 'bg-orange-500': provider === 'anthropic', 'bg-emerald-500': provider === 'openai', 'bg-blue-500': provider === 'gemini' }"></span>
           <span class="font-mono" x-text="model || provider"></span>
         </div>
 
@@ -281,21 +150,108 @@
                 <span x-text="status === 'running' ? 'Đang scrape' : 'Đang phân tích'"></span>
               </span>
             </template>
-            <template x-if="status === 'done'">
-              <span class="text-[11px] bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-md border border-blue-100">Scrape xong</span>
-            </template>
-            <template x-if="status === 'analyzed'">
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-md border border-emerald-100">Đã phân tích</span>
-            </template>
+            <template x-if="status === 'done'"><span class="text-[11px] bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-md border border-blue-100">Scrape xong</span></template>
+            <template x-if="status === 'analyzed'"><span class="text-[11px] bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-md border border-emerald-100">Đã phân tích</span></template>
           </div>
         </template>
+
+        <!-- User menu -->
+        <div class="h-5 w-px bg-border mx-1 hidden md:block"></div>
+        <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+          <button @click="open = !open" class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/70 transition">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+                 style="background:linear-gradient(135deg,#8b5cf6,#3b82f6)">
+              {{ (user_name or user_email or 'A')[0]|upper }}
+            </div>
+            <div class="hidden md:flex flex-col items-start leading-tight">
+              <span class="text-[11.5px] font-semibold text-fg">{{ user_name or 'Admin' }}</span>
+              <span class="text-[10px] text-muted-fg">{{ user_role or 'user' }}</span>
+            </div>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-muted-fg"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div x-show="open" x-cloak x-transition.opacity
+               class="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-xl border border-border shadow-lg p-1.5 z-50">
+            <div class="px-3 py-2 border-b border-border mb-1">
+              <div class="text-[12px] font-semibold text-fg truncate">{{ user_name }}</div>
+              <div class="text-[10.5px] text-muted-fg truncate">{{ user_email }}</div>
+            </div>
+            {% if user_role == 'admin' %}
+            <button @click="openUserManager(); open = false" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted text-left text-[12px] text-fg">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Quản lý user
+            </button>
+            {% endif %}
+            <a href="/auth/logout" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-[12px] text-red-600">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Đăng xuất
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </header>
 
+  <!-- ─── USER MANAGER MODAL ─── -->
+  {% if user_role == 'admin' %}
+  <div x-show="userManagerOpen" x-cloak x-transition.opacity @click.self="userManagerOpen = false"
+       class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-5">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col" @click.stop>
+      <div class="px-6 py-4 border-b border-border flex items-center justify-between" style="background:linear-gradient(to right, hsl(263 100% 99%), hsl(239 100% 99%))">
+        <div>
+          <h2 class="text-[16px] font-bold text-fg">Quản lý User</h2>
+          <p class="text-[11.5px] text-muted-fg mt-0.5">Thêm / xóa user truy cập tool</p>
+        </div>
+        <button @click="userManagerOpen = false" class="p-1.5 hover:bg-muted rounded-lg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto">
+        <div class="card p-4 mb-5" style="background:linear-gradient(to right, hsl(263 100% 99.5%), hsl(239 100% 99.5%))">
+          <div class="text-[12px] font-semibold text-fg mb-3">+ Thêm user mới</div>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input x-model="newUser.email" type="email" placeholder="email@example.com" class="input" />
+            <input x-model="newUser.name" type="text" placeholder="Tên hiển thị" class="input" />
+          </div>
+          <div class="grid grid-cols-[1fr_auto_auto] gap-2">
+            <input x-model="newUser.password" type="text" placeholder="Password" class="input" style="font-family:monospace" />
+            <select x-model="newUser.role" class="input" style="width:auto">
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+            <button @click="addUser()" class="btn btn-primary" style="padding:8px 16px">Thêm</button>
+          </div>
+          <div x-show="userManagerError" x-cloak class="text-[11px] text-red-600 mt-2" x-text="userManagerError"></div>
+        </div>
+        <div class="space-y-2">
+          <template x-for="u in users" :key="u.email">
+            <div class="card p-3 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+                   :style="`background:linear-gradient(135deg, ${u.role === 'admin' ? '#f97316,#ec4899' : '#8b5cf6,#3b82f6'})`"
+                   x-text="(u.name || u.email)[0].toUpperCase()"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-[13px] font-semibold text-fg truncate" x-text="u.name || u.email"></span>
+                  <span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded"
+                        :class="u.role === 'admin' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+                        x-text="u.role"></span>
+                  <span x-show="u.source && u.source.startsWith('lark')" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Lark</span>
+                </div>
+                <div class="text-[11px] text-muted-fg truncate" x-text="u.email"></div>
+              </div>
+              <button @click="deleteUser(u.email)" class="p-1.5 hover:bg-red-50 rounded-lg text-red-500" :disabled="u.email === '{{ user_email }}'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <main class="max-w-7xl mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-    <!-- ═══════ LEFT: Config ═══════ -->
+    <!-- LEFT: Config -->
     <aside class="lg:col-span-4 space-y-4">
 
       <!-- AI Provider -->
@@ -309,196 +265,353 @@
           <button @click="setProvider('anthropic')" :class="['provider-card', provider === 'anthropic' && 'active']">
             <svg viewBox="0 0 24 24" fill="#d97757"><path d="M12 2.5L3 21.5h3.5l1.4-3.4h8.2l1.4 3.4H21L12 2.5zm-3 12l3-7.2 3 7.2H9z"/></svg>
             <span class="name">Claude</span>
-            <span x-show="provider === 'anthropic'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span x-show="provider === 'anthropic'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
           <button @click="setProvider('openai')" :class="['provider-card', provider === 'openai' && 'active']">
             <svg viewBox="0 0 24 24" fill="#0d8a6a"><path d="M22.28 9.82a5.92 5.92 0 0 0-.51-4.91 6 6 0 0 0-6.5-2.88A6 6 0 0 0 4.86 4a5.92 5.92 0 0 0-3.94 2.86 6 6 0 0 0 .74 7.05 5.92 5.92 0 0 0 .51 4.91 6 6 0 0 0 6.5 2.88A6 6 0 0 0 19.14 20a5.92 5.92 0 0 0 3.94-2.86 6 6 0 0 0-.8-7.32zm-9 12.66a4.5 4.5 0 0 1-2.88-1.04l.14-.08 4.79-2.77a.79.79 0 0 0 .39-.68v-6.76l2.02 1.17v5.6a4.5 4.5 0 0 1-4.46 4.56zM3.65 17.62a4.48 4.48 0 0 1-.54-3.03l.14.08 4.79 2.77a.78.78 0 0 0 .79 0L14.7 14v2.34l-4.79 2.77a4.5 4.5 0 0 1-6.26-1.49zM2.4 7.06a4.5 4.5 0 0 1 2.35-1.98v5.7a.77.77 0 0 0 .39.68l5.81 3.35-2.02 1.17-4.79-2.77a4.5 4.5 0 0 1-1.74-6.15zm16.62 3.86l-5.86-3.39 2.02-1.16 4.79 2.77a4.5 4.5 0 0 1-.7 8.13v-5.7a.78.78 0 0 0-.25-.65zm2.01-3.05l-.14-.09L16.1 5.1a.78.78 0 0 0-.79 0L9.5 8.45V6.11l4.79-2.77a4.5 4.5 0 0 1 6.74 4.53zM8.4 12.07L6.38 10.9V5.32a4.5 4.5 0 0 1 7.38-3.46l-.14.08-4.79 2.77a.79.79 0 0 0-.39.68zm1.1-2.36l2.59-1.49 2.59 1.49v2.99l-2.59 1.49-2.59-1.49z"/></svg>
             <span class="name">OpenAI</span>
-            <span x-show="provider === 'openai'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span x-show="provider === 'openai'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
           <button @click="setProvider('gemini')" :class="['provider-card', provider === 'gemini' && 'active']">
             <svg viewBox="0 0 24 24"><defs><linearGradient id="gemg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4285f4"/><stop offset="100%" stop-color="#9b72cb"/></linearGradient></defs><path fill="url(#gemg)" d="M12 2L8.5 8.5 2 12l6.5 3.5L12 22l3.5-6.5L22 12l-6.5-3.5L12 2z"/></svg>
             <span class="name">Gemini</span>
-            <span x-show="provider === 'gemini'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span x-show="provider === 'gemini'" class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
         </div>
 
-        <!-- API key -->
         <div class="space-y-1.5 mb-3">
           <div class="flex items-center justify-between">
             <label class="text-[11px] font-medium text-fg">API Key</label>
             <a :href="apiKeyLink" target="_blank" class="text-[10.5px] text-primary hover:underline">Get key →</a>
           </div>
           <div class="relative">
-            <input
-              :type="showKey ? 'text' : 'password'"
-              x-model="apiKey"
-              @input.debounce.700ms="onKeyChange()"
-              :placeholder="placeholderKey"
-              class="input input-mono pr-9"
-            />
+            <input :type="showKey ? 'text' : 'password'" x-model="apiKey" @input.debounce.700ms="onKeyChange()" :placeholder="placeholderKey" class="input input-mono pr-9" />
             <button @click="showKey = !showKey" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-1">
-              <svg x-show="!showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg x-show="showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+              <svg x-show="!showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg x-show="showKey" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
             </button>
           </div>
         </div>
 
-        <!-- Model -->
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
             <label class="text-[11px] font-medium text-fg">Model</label>
             <button @click="fetchModels()" :disabled="!apiKey.trim() || loadingModels" class="text-[10.5px] text-primary hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1">
-              <svg :class="{ 'animate-spin': loadingModels }" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+              <svg :class="{ 'animate-spin': loadingModels }" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
               <span x-text="loadingModels ? 'Loading...' : 'Refresh'"></span>
             </button>
           </div>
           <select x-model="model" @change="saveProviderConfig()" class="input">
-            <template x-if="availableModels.length === 0">
-              <option value="" disabled>— Nhập API key để load model —</option>
-            </template>
-            <template x-for="m in availableModels" :key="m.id">
-              <option :value="m.id" x-text="m.label"></option>
-            </template>
+            <template x-if="availableModels.length === 0"><option value="" disabled>— Nhập API key để load —</option></template>
+            <template x-for="m in availableModels" :key="m.id"><option :value="m.id" x-text="m.label"></option></template>
           </select>
-          <div x-show="modelError" class="text-[10.5px] text-destructive flex items-center gap-1">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span x-text="modelError"></span>
-          </div>
-          <div x-show="availableModels.length > 0" class="text-[10.5px] text-muted-fg" x-text="availableModels.length + ' model khả dụng'"></div>
+          <div x-show="modelError" class="text-[10.5px] text-destructive" x-text="modelError"></div>
+          <div x-show="availableModels.length > 0" class="text-[10.5px] text-muted-fg" x-text="availableModels.length + ' model'"></div>
         </div>
       </div>
 
-      <!-- ms_token -->
+      <!-- ms_tokens -->
       <div class="card p-5">
         <div class="section-label">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
-          TikTok ms_token
+          TikTok ms_tokens
+          <span class="ml-auto text-[10px] font-mono font-medium bg-muted text-muted-fg px-2 py-0.5 rounded-md normal-case tracking-normal" x-text="msTokenList.length + ' token'"></span>
         </div>
-        <textarea
-          x-model="msToken"
-          @input.debounce.500ms="saveConfig()"
-          rows="3"
-          placeholder="Paste msToken từ cookie TikTok..."
-          class="input input-mono resize-none"
-          :disabled="isRunning"
-        ></textarea>
-        <details class="mt-3">
-          <summary class="text-[11px] text-primary cursor-pointer hover:underline select-none flex items-center gap-1">
-            <svg class="transition-transform" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-            Cách lấy trên macOS
+
+        <textarea x-model="msTokens" @input.debounce.500ms="saveConfig()" rows="3" placeholder="msToken thứ nhất&#10;msToken thứ hai (nếu multi-session)&#10;..." class="input input-mono resize-none" :disabled="isRunning"></textarea>
+
+        <!-- Region + Test bar -->
+        <div class="mt-2.5 grid grid-cols-[1fr_auto] gap-2">
+          <div class="flex items-center gap-1.5">
+            <label class="text-[10.5px] text-muted-fg whitespace-nowrap">Lấy ở:</label>
+            <select x-model="msTokenRegion" @change="saveConfig()" class="input" style="padding:5px 8px; font-size:11px">
+              <option value="">— Chọn —</option>
+              <template x-for="c in COUNTRIES" :key="c.code">
+                <option :value="c.code" x-text="c.flag + ' ' + c.name"></option>
+              </template>
+            </select>
+          </div>
+          <button @click="testScrape()" :disabled="testingScrape || msTokenList.length === 0"
+                  class="text-[11px] font-semibold px-3 py-1.5 rounded-md bg-fg text-white hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap">
+            <svg x-show="!testingScrape" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <svg x-show="testingScrape" class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/>
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <span x-text="testingScrape ? 'Đang test...' : '🧪 Test 1 video'"></span>
+          </button>
+        </div>
+
+        <!-- Region mismatch warning -->
+        <div x-show="regionMismatch" x-cloak class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 flex items-start gap-2">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>
+            <strong>⚠️ Region mismatch:</strong>
+            msToken lấy ở <strong x-text="countryFlag(msTokenRegion) + ' ' + msTokenRegion.toUpperCase()"></strong>
+            nhưng outbound IP đang là <strong x-text="countryFlag(detectedCountry) + ' ' + detectedCountry.toUpperCase()"></strong>.
+            TikTok có thể reject → scrape ra 0 video. Lấy lại msToken khi browser đang ở <strong x-text="countryFlag(detectedCountry) + ' ' + detectedCountry.toUpperCase()"></strong>.
+          </div>
+        </div>
+
+        <!-- Test result -->
+        <div x-show="testResult" x-cloak class="mt-2 rounded-md border px-3 py-2.5 text-[11px]"
+             :class="testResult && testResult.success ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-red-200 bg-red-50 text-red-900'">
+          <template x-if="testResult && testResult.success">
+            <div>
+              <div class="font-semibold flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Proxy + msToken hoạt động!
+              </div>
+              <div class="mt-1.5 space-y-0.5 leading-relaxed">
+                <div>Video test: <strong x-text="'@' + (testResult.video?.author || '?')"></strong> · <span x-text="(testResult.video?.views || 0).toLocaleString() + ' views'"></span></div>
+                <div>Comment fetch: <strong class="text-emerald-700" x-text="testResult.video?.comments_fetched + ' / 5'"></strong></div>
+                <div class="text-emerald-700/70 italic">Sẵn sàng scrape full</div>
+              </div>
+            </div>
+          </template>
+          <template x-if="testResult && !testResult.success">
+            <div>
+              <div class="font-semibold flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Test FAIL ở stage: <code class="bg-red-100 px-1 rounded" x-text="testResult.stage"></code>
+              </div>
+              <div class="mt-1.5 space-y-1 leading-relaxed">
+                <div><strong>Lỗi:</strong> <span x-text="testResult.error"></span></div>
+                <div class="text-red-800"><strong>Đề xuất:</strong> <span x-text="testResult.suggest"></span></div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div x-show="testError" x-cloak class="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700" x-text="testError"></div>
+
+        <!-- Important callout -->
+        <div class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-3 py-2.5 text-[11px] text-blue-900 flex gap-2.5">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            <strong class="font-semibold">Có nhiều cookie tên <code class="bg-blue-100 px-1 rounded">msToken</code>?</strong> Chọn cái có:
+            <ul class="mt-1 space-y-0.5 list-disc list-inside ml-0.5">
+              <li>Domain = <code class="bg-blue-100 px-1 rounded">.tiktok.com</code> (có dấu chấm đầu)</li>
+              <li>Value dài nhất (~150 ký tự)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Browser guide tabs -->
+        <details class="mt-3" x-data="{ tab: 'mac-chrome' }">
+          <summary class="cursor-pointer select-none list-none">
+            <div class="flex items-center justify-between text-[11px] font-medium text-primary hover:underline">
+              <span class="flex items-center gap-1">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transition-transform"><polyline points="9 18 15 12 9 6"/></svg>
+                Hướng dẫn lấy msToken
+              </span>
+            </div>
           </summary>
-          <div class="mt-3 space-y-3">
 
-            <div class="rounded-md border border-border p-3 bg-muted/50">
-              <div class="flex items-center gap-2 text-[12px] font-medium text-fg mb-2">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                Chrome / Brave / Edge
-              </div>
+          <div class="mt-3">
+            <div class="seg mb-3">
+              <button @click="tab='mac-chrome'" :class="['seg-btn', tab==='mac-chrome' && 'active']">macOS · Chrome</button>
+              <button @click="tab='win-chrome'" :class="['seg-btn', tab==='win-chrome' && 'active']">Windows · Chrome</button>
+              <button @click="tab='safari'" :class="['seg-btn', tab==='safari' && 'active']">Safari</button>
+            </div>
+
+            <div x-show="tab==='mac-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
               <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Mở Chrome/Brave/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → DevTools</li>
+                <li>Tab <strong>Application</strong> (bấm <kbd>»</kbd> nếu ẩn)</li>
+                <li>Sidebar: <strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
+                <li>Tìm hàng Name = <code>msToken</code>, Domain = <code>.tiktok.com</code></li>
+                <li>Copy ô <strong>Value</strong></li>
+              </ol>
+            </div>
+
+            <div x-show="tab==='win-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Mở Chrome/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                <li>Nhấn <kbd>F12</kbd> hoặc <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></li>
+                <li>Tab <strong>Application</strong></li>
+                <li><strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
+                <li>Tìm <code>msToken</code> với Domain <code>.tiktok.com</code></li>
+                <li>Copy <strong>Value</strong></li>
+              </ol>
+            </div>
+
+            <div x-show="tab==='safari'" class="rounded-md border border-border bg-muted/30 p-3">
+              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                <li>Safari → Settings → <strong>Advanced</strong> → tick <em>"Show Develop menu"</em></li>
                 <li>Mở <code>tiktok.com</code> → đăng nhập</li>
-                <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → mở DevTools</li>
-                <li>Tab <strong class="text-fg">Application</strong> (bấm <kbd>»</kbd> nếu ẩn)</li>
-                <li>Sidebar: <strong class="text-fg">Cookies</strong> → <code>https://www.tiktok.com</code></li>
-                <li>Tìm hàng <code>msToken</code> → copy <strong class="text-fg">Value</strong></li>
+                <li>Menu <strong>Develop</strong> → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
+                <li>Tab <strong>Storage</strong> → Cookies → <code>tiktok.com</code></li>
+                <li>Tìm <code>msToken</code> Domain <code>.tiktok.com</code> → copy Value</li>
               </ol>
-            </div>
-
-            <div class="rounded-md border border-border p-3 bg-muted/50">
-              <div class="flex items-center gap-2 text-[12px] font-medium text-fg mb-2">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Safari
-              </div>
-              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
-                <li>Settings → Advanced → tick <em>Show Develop menu</em></li>
-                <li>Mở tiktok.com → đăng nhập</li>
-                <li>Develop → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
-                <li>Tab <strong class="text-fg">Storage</strong> → Cookies → tiktok.com</li>
-                <li>Tìm <code>msToken</code> → copy Value</li>
-              </ol>
-            </div>
-
-            <div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 flex items-start gap-2">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Token hết hạn sau vài giờ — gặp lỗi auth thì lấy lại token mới.</span>
             </div>
           </div>
         </details>
+
+        <!-- Warnings -->
+        <div class="mt-3 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>Token hết hạn sau vài giờ → gặp lỗi auth thì lấy lại. <strong>Multi-session cần nhiều token từ nhiều tài khoản TikTok khác nhau</strong>.</div>
+        </div>
       </div>
 
-      <!-- Source -->
+      <!-- ─── SOURCES (5 modes) ─── -->
       <div class="card p-5">
         <div class="section-label">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          Nguồn dữ liệu
+          Nguồn dữ liệu <span class="ml-auto text-[10.5px] font-medium text-muted-fg" x-text="activeSourceCount + '/5 đang dùng'"></span>
         </div>
 
-        <div class="seg mb-4">
-          <button @click="sourceMode = 'hashtag'" :class="['seg-btn', sourceMode === 'hashtag' && 'active']">Hashtag</button>
-          <button @click="sourceMode = 'url'" :class="['seg-btn', sourceMode === 'url' && 'active']">URL</button>
-          <button @click="sourceMode = 'both'" :class="['seg-btn', sourceMode === 'both' && 'active']">Cả hai</button>
-        </div>
+        <div class="space-y-2.5">
 
-        <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'" class="space-y-2.5">
-          <div class="flex flex-wrap gap-1.5">
-            <template x-for="(tag, i) in hashtags" :key="i">
-              <span class="tag">
-                #<span x-text="tag"></span>
-                <button @click="removeTag(i)" :disabled="isRunning" class="leading-none text-[13px]">×</button>
-              </span>
-            </template>
+          <!-- 1. Hashtag -->
+          <div :class="['source-row', useHashtags && 'active']">
+            <div class="source-header" @click="useHashtags = !useHashtags; saveConfig()">
+              <div class="source-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="source-title">Hashtag</div>
+                <div class="source-sub" x-text="hashtags.length + ' tag · WIN filter'"></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="source-content" x-show="useHashtags" x-cloak>
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <template x-for="(tag, i) in hashtags" :key="i">
+                  <span class="tag">#<span x-text="tag"></span><button @click="removeFrom('hashtags', i)" :disabled="isRunning" class="leading-none">×</button></span>
+                </template>
+              </div>
+              <div class="flex gap-2">
+                <input x-model="newHashtag" @keydown.enter.prevent="addTo('hashtags', 'newHashtag', /^#/)" type="text" placeholder="Thêm hashtag..." class="input flex-1" :disabled="isRunning" />
+                <button @click="addTo('hashtags', 'newHashtag', /^#/)" :disabled="isRunning" class="btn btn-ghost btn-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <input x-model="newTag" @keydown.enter.prevent="addTag()" type="text" placeholder="Thêm hashtag…" class="input flex-1" :disabled="isRunning" />
-            <button @click="addTag()" :disabled="isRunning" class="btn btn-ghost btn-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </div>
-        </div>
 
-        <div x-show="sourceMode === 'url' || sourceMode === 'both'" class="space-y-1.5" :class="{ 'mt-4 pt-4 border-t border-border': sourceMode === 'both' }">
-          <textarea x-model="videoUrls" rows="4"
-            placeholder="https://www.tiktok.com/@user/video/123…&#10;Mỗi dòng 1 URL"
-            class="input input-mono resize-none" :disabled="isRunning"></textarea>
-          <div class="text-[10.5px] text-muted-fg" x-text="videoUrlList.length + ' URL hợp lệ'"></div>
+          <!-- 2. URL video -->
+          <div :class="['source-row', useUrls && 'active']">
+            <div class="source-header" @click="useUrls = !useUrls; saveConfig()">
+              <div class="source-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="source-title">URL video</div>
+                <div class="source-sub" x-text="videoUrlList.length + ' URL · không filter'"></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="source-content" x-show="useUrls" x-cloak>
+              <textarea x-model="videoUrls" rows="3" placeholder="https://www.tiktok.com/@user/video/..." class="input input-mono resize-none" :disabled="isRunning"></textarea>
+            </div>
+          </div>
+
+          <!-- 3. User -->
+          <div :class="['source-row', useUsers && 'active']">
+            <div class="source-header" @click="useUsers = !useUsers; saveConfig()">
+              <div class="source-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="source-title">User (@username)</div>
+                <div class="source-sub" x-text="usernames.length + ' user · scrape competitor/KOL'"></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="source-content" x-show="useUsers" x-cloak>
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <template x-for="(u, i) in usernames" :key="i">
+                  <span class="tag">@<span x-text="u"></span><button @click="removeFrom('usernames', i)" :disabled="isRunning" class="leading-none">×</button></span>
+                </template>
+              </div>
+              <div class="flex gap-2">
+                <input x-model="newUsername" @keydown.enter.prevent="addTo('usernames', 'newUsername', /^@/)" type="text" placeholder="@username..." class="input flex-1" :disabled="isRunning" />
+                <button @click="addTo('usernames', 'newUsername', /^@/)" :disabled="isRunning" class="btn btn-ghost btn-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Keyword search -->
+          <div :class="['source-row', useKeywords && 'active']">
+            <div class="source-header" @click="useKeywords = !useKeywords; saveConfig()">
+              <div class="source-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="source-title">Keyword search</div>
+                <div class="source-sub" x-text="keywords.length + ' từ khóa · search rộng'"></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="source-content" x-show="useKeywords" x-cloak>
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <template x-for="(k, i) in keywords" :key="i">
+                  <span class="tag">"<span x-text="k"></span>"<button @click="removeFrom('keywords', i)" :disabled="isRunning" class="leading-none">×</button></span>
+                </template>
+              </div>
+              <div class="flex gap-2">
+                <input x-model="newKeyword" @keydown.enter.prevent="addTo('keywords', 'newKeyword')" type="text" placeholder='vd: "whey protein review"' class="input flex-1" :disabled="isRunning" />
+                <button @click="addTo('keywords', 'newKeyword')" :disabled="isRunning" class="btn btn-ghost btn-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+              <div class="text-[10.5px] text-amber-600 mt-1.5">⚠ Search endpoint hay bị rate-limit</div>
+            </div>
+          </div>
+
+          <!-- 5. Related videos -->
+          <div :class="['source-row', useRelated && 'active']">
+            <div class="source-header" @click="useRelated = !useRelated; saveConfig()">
+              <div class="source-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6"/><path d="m4.22 4.22 4.24 4.24m7.08 7.08 4.24 4.24"/><path d="M1 12h6m10 0h6"/><path d="m4.22 19.78 4.24-4.24m7.08-7.08 4.24-4.24"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="source-title">Related videos</div>
+                <div class="source-sub" x-text="relatedSeedList.length + ' seed · thuật toán TikTok'"></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="source-content" x-show="useRelated" x-cloak>
+              <textarea x-model="relatedSeeds" rows="3" placeholder="URL seed (mỗi dòng 1) — sẽ lấy video TikTok đề xuất cùng chủ đề" class="input input-mono resize-none mb-2" :disabled="isRunning"></textarea>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-muted-fg">Related / seed</span>
+                <span class="text-[11px] font-medium text-fg" x-text="relatedCount"></span>
+              </div>
+              <input type="range" min="5" max="50" step="5" x-model.number="relatedCount" :disabled="isRunning" class="mt-1" />
+            </div>
+          </div>
+
         </div>
       </div>
 
       <!-- WIN criteria -->
-      <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'" class="card p-5">
+      <div x-show="needsWinFilter" class="card p-5">
         <div class="section-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
           Tiêu chí WIN
         </div>
-        <p class="text-[11px] text-muted-fg -mt-2 mb-3">Chỉ scrape video đạt cả 4 chỉ số.</p>
+        <p class="text-[11px] text-muted-fg -mt-2 mb-3">Áp dụng cho hashtag/user/keyword/related. URL không filter.</p>
 
         <div class="space-y-3.5">
           <div>
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Min views</span>
-              <span class="font-medium text-fg" x-text="formatNum(minViews)"></span>
-            </div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min views</span><span class="font-medium text-fg" x-text="formatNum(minViews)"></span></div>
             <input type="range" min="10000" max="1000000" step="10000" x-model.number="minViews" :disabled="isRunning" />
           </div>
           <div>
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Min engagement</span>
-              <span class="font-medium text-fg" x-text="minEngagementRate + '%'"></span>
-            </div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min engagement</span><span class="font-medium text-fg" x-text="minEngagementRate + '%'"></span></div>
             <input type="range" min="1" max="20" step="0.5" x-model.number="minEngagementRate" :disabled="isRunning" />
           </div>
           <div>
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Min comment rate <span class="text-[10px] text-amber-600 font-medium ml-0.5">★ key</span></span>
-              <span class="font-medium text-fg" x-text="minCommentRate + '%'"></span>
-            </div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min comment rate <span class="text-[10px] text-amber-600 font-medium ml-0.5">★</span></span><span class="font-medium text-fg" x-text="minCommentRate + '%'"></span></div>
             <input type="range" min="0.1" max="2" step="0.1" x-model.number="minCommentRate" :disabled="isRunning" />
           </div>
           <div>
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Min like rate</span>
-              <span class="font-medium text-fg" x-text="minLikeRate + '%'"></span>
-            </div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min like rate</span><span class="font-medium text-fg" x-text="minLikeRate + '%'"></span></div>
             <input type="range" min="1" max="20" step="0.5" x-model.number="minLikeRate" :disabled="isRunning" />
           </div>
         </div>
@@ -507,32 +620,122 @@
       <!-- Counts -->
       <div class="card p-5">
         <div class="section-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
           Giới hạn
         </div>
         <div class="space-y-3.5">
-          <div x-show="sourceMode === 'hashtag' || sourceMode === 'both'">
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Video / hashtag</span>
-              <span class="font-medium text-fg" x-text="maxVideos"></span>
-            </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Video / nguồn</span><span class="font-medium text-fg" x-text="maxVideos"></span></div>
             <input type="range" min="10" max="100" step="5" x-model.number="maxVideos" :disabled="isRunning" />
           </div>
           <div>
-            <div class="flex justify-between text-[11px] mb-1.5">
-              <span class="text-muted-fg">Comment / video</span>
-              <span class="font-medium text-fg" x-text="maxComments"></span>
-            </div>
+            <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Comment / video</span><span class="font-medium text-fg" x-text="maxComments"></span></div>
             <input type="range" min="20" max="200" step="10" x-model.number="maxComments" :disabled="isRunning" />
           </div>
         </div>
       </div>
 
-      <!-- Action -->
-      <button @click="startScrape()" :disabled="isRunning || !msToken.trim() || !canStart" class="btn btn-primary w-full" style="padding: 11px 16px; font-size: 13px;">
+      <!-- Advanced -->
+      <div class="card p-5">
+        <details>
+          <summary class="section-label cursor-pointer select-none list-none -mb-3" style="margin-bottom: 0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Advanced
+            <svg class="ml-auto w-3 h-3 transition-transform group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </summary>
+
+          <div class="mt-4 pt-4 border-t border-border space-y-4">
+
+            <!-- Multi-session -->
+            <div>
+              <div class="flex justify-between text-[11px] mb-1.5">
+                <span class="text-muted-fg">Số session song song</span>
+                <span class="font-medium text-fg" x-text="numSessions"></span>
+              </div>
+              <input type="range" min="1" max="3" step="1" x-model.number="numSessions" :disabled="isRunning" />
+              <div class="text-[10.5px] text-muted-fg mt-1" x-text="numSessions === 1 ? 'Single session — đủ cho mọi nhu cầu thường' : 'Multi-session: cần ' + numSessions + ' ms_token | RAM ~' + (numSessions * 350) + 'MB'"></div>
+              <div x-show="numSessions > msTokenList.length" class="text-[10.5px] text-destructive mt-1">
+                ⚠ Đang có <span x-text="msTokenList.length"></span> token nhưng cần <span x-text="numSessions"></span>
+              </div>
+            </div>
+
+            <!-- Proxy -->
+            <div class="border-t border-border pt-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-[11px] font-medium text-fg flex items-center gap-2">
+                  HTTP Proxy
+                  <!-- Auto-detected flag badge -->
+                  <span x-show="detectedCountry" x-cloak class="text-[10px] font-normal bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+                    <span x-text="countryFlag(detectedCountry)"></span>
+                    <span x-text="detectedCountryName || detectedCountry.toUpperCase()"></span>
+                    <span class="text-emerald-500">✓</span>
+                  </span>
+                  <span x-show="checkingIp" x-cloak class="text-[10px] font-normal bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-100 flex items-center gap-1">
+                    <svg class="animate-spin" width="9" height="9" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/>
+                      <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                    Đang check IP
+                  </span>
+                  <span x-show="ipCheckError" x-cloak class="text-[10px] font-normal bg-red-50 text-red-700 px-2 py-0.5 rounded-md border border-red-100">⚠ Proxy lỗi</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <span class="text-[10.5px] text-muted-fg">Bật</span>
+                  <input type="checkbox" x-model="proxyEnabled" @change="saveConfig(); checkProxy()" class="accent-primary" />
+                </label>
+              </div>
+
+              <!-- Detected IP info -->
+              <div x-show="detectedIp" x-cloak class="text-[10.5px] rounded-md border px-3 py-2 mb-2 flex items-start gap-2"
+                   :class="proxyEnabled ? 'bg-emerald-50/60 border-emerald-100 text-emerald-800' : 'bg-blue-50/40 border-blue-100 text-blue-800'">
+                <span class="text-[14px]" x-text="countryFlag(detectedCountry)"></span>
+                <div class="flex-1">
+                  <div class="font-medium">
+                    <span x-text="detectedCountryName"></span>
+                    <span class="text-[10px] opacity-75" x-text="detectedCity ? ' · ' + detectedCity : ''"></span>
+                  </div>
+                  <div class="font-mono text-[10px] opacity-70" x-text="'IP: ' + (detectedIp || '...')"></div>
+                </div>
+                <button @click="checkProxy()" :disabled="checkingIp" class="text-[10px] underline opacity-70 hover:opacity-100">refresh</button>
+              </div>
+
+              <div x-show="!proxyEnabled" x-cloak class="text-[11px] text-muted-fg rounded-md bg-muted/40 border border-border px-3 py-2 mb-2">
+                Đang dùng IP máy chạy Flask. Nếu scrape &gt; 1000 video/ngày dễ bị TikTok limit IP.
+              </div>
+
+              <div x-show="proxyEnabled" x-cloak class="space-y-2">
+                <input x-model="proxyServer" @input.debounce.700ms="saveConfig(); checkProxy()" type="text" placeholder="host:port (vd: us.smartproxy.com:10000)" class="input input-mono w-full" :disabled="isRunning" />
+
+                <div class="grid grid-cols-2 gap-2">
+                  <input x-model="proxyUsername" @input.debounce.700ms="saveConfig(); checkProxy()" type="text" placeholder="username" class="input input-mono" :disabled="isRunning" />
+                  <div class="relative">
+                    <input x-model="proxyPassword" @input.debounce.700ms="saveConfig(); checkProxy()" :type="showProxyPass ? 'text' : 'password'" placeholder="password" class="input input-mono pr-8" :disabled="isRunning" />
+                    <button @click="showProxyPass = !showProxyPass" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-0.5">
+                      <svg x-show="!showProxyPass" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg x-show="showProxyPass" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div x-show="ipCheckError" x-cloak class="text-[10.5px] text-red-600 bg-red-50 border border-red-100 rounded-md px-2.5 py-1.5">
+                  <strong>Lỗi proxy:</strong> <span x-text="ipCheckError"></span>
+                </div>
+
+                <div class="text-[10.5px] text-muted-fg leading-relaxed">
+                  Country flag tự detect khi anh nhập proxy. Auto-check sau 700ms khi đổi field.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </details>
+      </div>
+
+      <!-- Start button -->
+      <button @click="startScrape()" :disabled="isRunning || msTokenList.length === 0 || !canStart" class="btn btn-primary w-full" style="padding: 11px 16px; font-size: 13px;">
         <template x-if="!isRunning">
           <span class="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             Bắt đầu Scrape
           </span>
         </template>
@@ -549,64 +752,44 @@
 
     </aside>
 
-    <!-- ═══════ RIGHT: Results ═══════ -->
+    <!-- RIGHT: Results -->
     <section class="lg:col-span-8 space-y-4">
 
-      <!-- Stats -->
       <div class="grid grid-cols-3 gap-3" x-show="jobId" x-cloak>
-        <div class="card p-4">
-          <div class="stat-num" x-text="videoCount.toLocaleString()">0</div>
-          <div class="stat-label">Video WIN</div>
-        </div>
-        <div class="card p-4">
-          <div class="stat-num" x-text="commentCount.toLocaleString()">0</div>
-          <div class="stat-label">Comment</div>
-        </div>
-        <div class="card p-4">
-          <div class="stat-num" x-text="sourceCount">0</div>
-          <div class="stat-label" x-text="sourceMode === 'url' ? 'URL' : (sourceMode === 'both' ? 'Nguồn' : 'Hashtag')">—</div>
-        </div>
+        <div class="card p-4"><div class="stat-num" x-text="videoCount.toLocaleString()">0</div><div class="stat-label">Video WIN</div></div>
+        <div class="card p-4"><div class="stat-num" x-text="commentCount.toLocaleString()">0</div><div class="stat-label">Comment</div></div>
+        <div class="card p-4"><div class="stat-num" x-text="activeSourceCount">0</div><div class="stat-label">Nguồn</div></div>
       </div>
 
-      <!-- Log -->
       <div class="card overflow-hidden" x-show="jobId || logs.length" x-cloak>
         <div class="flex items-center justify-between px-4 h-10 border-b border-border">
           <div class="flex items-center gap-2">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-fg"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-fg"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
             <span class="text-[11.5px] font-semibold text-fg">Live log</span>
           </div>
           <button @click="logs = []" class="text-[11px] text-muted-fg hover:text-fg">Clear</button>
         </div>
-        <div class="log-box p-4 h-64 overflow-y-auto" x-ref="logBox">
-          <template x-if="logs.length === 0">
-            <p class="text-muted-fg">Sẵn sàng. Nhấn "Bắt đầu Scrape"...</p>
-          </template>
-          <template x-for="(line, i) in logs" :key="i">
-            <p x-text="line"></p>
-          </template>
+        <div class="log-box p-4 h-72 overflow-y-auto" x-ref="logBox">
+          <template x-if="logs.length === 0"><p class="text-muted-fg">Sẵn sàng. Nhấn "Bắt đầu Scrape"...</p></template>
+          <template x-for="(line, i) in logs" :key="i"><p x-text="line"></p></template>
         </div>
       </div>
 
-      <!-- Action bar -->
       <div class="flex flex-wrap gap-2" x-show="status === 'done' || status === 'analyzed'" x-cloak>
         <button @click="download('csv')" class="btn btn-ghost">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Tải CSV
-          <span class="text-muted-fg font-mono">(<span x-text="commentCount.toLocaleString()"></span>)</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Tải CSV <span class="text-muted-fg font-mono">(<span x-text="commentCount.toLocaleString()"></span>)</span>
         </button>
-
         <button x-show="status === 'done'" @click="analyze()" :disabled="!apiKey.trim() || !model" class="btn btn-accent">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
           Phân tích với <span x-text="providerLabel"></span>
         </button>
-
         <button x-show="status === 'analyzed' && report" @click="download('report')" class="btn btn-ghost">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/></svg>
           Tải báo cáo .md
         </button>
       </div>
 
-      <!-- Analyzing -->
       <div x-show="status === 'analyzing'" x-cloak class="card p-6 text-center" style="background: hsl(221 100% 99%);">
         <div class="inline-flex items-center gap-2.5 text-[13px] text-primary font-medium">
           <svg class="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -618,11 +801,10 @@
         <p class="text-[11.5px] text-muted-fg mt-2">Thường mất 1–3 phút</p>
       </div>
 
-      <!-- Report -->
       <div x-show="report" x-cloak class="card overflow-hidden">
         <div class="flex items-center justify-between px-5 h-11 border-b border-border bg-muted/30">
           <div class="flex items-center gap-2">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span class="text-[12px] font-semibold text-fg">Insight Report</span>
           </div>
           <div class="text-[10.5px] text-muted-fg font-mono" x-text="provider + ' · ' + model"></div>
@@ -630,13 +812,12 @@
         <div class="report p-6 overflow-auto" x-html="renderedReport"></div>
       </div>
 
-      <!-- Empty state -->
       <div x-show="!jobId" class="card p-12 text-center border-dashed">
         <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-muted flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-fg"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-fg"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </div>
         <p class="text-[13px] text-fg font-medium">Sẵn sàng phân tích</p>
-        <p class="text-[11.5px] text-muted-fg mt-1.5">Cấu hình AI provider, ms_token, hashtag rồi nhấn Bắt đầu Scrape</p>
+        <p class="text-[11.5px] text-muted-fg mt-1.5">Cấu hình AI, ms_token, bật ít nhất 1 nguồn rồi nhấn Bắt đầu</p>
       </div>
 
     </section>
@@ -653,14 +834,10 @@
         { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
       ],
       openai: [
-        { id: 'gpt-4o', label: 'gpt-4o' },
-        { id: 'gpt-4o-mini', label: 'gpt-4o-mini' },
-        { id: 'gpt-4-turbo', label: 'gpt-4-turbo' },
-        { id: 'gpt-4', label: 'gpt-4' },
-        { id: 'o1', label: 'o1' },
-        { id: 'o1-mini', label: 'o1-mini' },
-        { id: 'o3-mini', label: 'o3-mini' },
-        { id: 'o3', label: 'o3' },
+        { id: 'gpt-4o', label: 'gpt-4o' }, { id: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+        { id: 'gpt-4-turbo', label: 'gpt-4-turbo' }, { id: 'gpt-4', label: 'gpt-4' },
+        { id: 'o1', label: 'o1' }, { id: 'o1-mini', label: 'o1-mini' },
+        { id: 'o3-mini', label: 'o3-mini' }, { id: 'o3', label: 'o3' },
         { id: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
       ],
       gemini: [
@@ -673,101 +850,149 @@
         { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
       ],
     };
+    const PLACEHOLDER_KEYS = { anthropic: 'sk-ant-api03-...', openai: 'sk-proj-...', gemini: 'AIzaSy...' };
+    const KEY_LINKS = { anthropic: 'https://console.anthropic.com/settings/keys', openai: 'https://platform.openai.com/api-keys', gemini: 'https://aistudio.google.com/apikey' };
 
-    const PLACEHOLDER_KEYS = {
-      anthropic: 'sk-ant-api03-...',
-      openai: 'sk-proj-...',
-      gemini: 'AIzaSy...',
-    };
-
-    const KEY_LINKS = {
-      anthropic: 'https://console.anthropic.com/settings/keys',
-      openai: 'https://platform.openai.com/api-keys',
-      gemini: 'https://aistudio.google.com/apikey',
-    };
+    const COUNTRIES = [
+      { code: '',   flag: '🌐', name: 'Auto / Không chọn' },
+      { code: 'vn', flag: '🇻🇳', name: 'Vietnam' },
+      { code: 'us', flag: '🇺🇸', name: 'United States' },
+      { code: 'uk', flag: '🇬🇧', name: 'United Kingdom' },
+      { code: 'sg', flag: '🇸🇬', name: 'Singapore' },
+      { code: 'jp', flag: '🇯🇵', name: 'Japan' },
+      { code: 'kr', flag: '🇰🇷', name: 'South Korea' },
+      { code: 'th', flag: '🇹🇭', name: 'Thailand' },
+      { code: 'id', flag: '🇮🇩', name: 'Indonesia' },
+      { code: 'my', flag: '🇲🇾', name: 'Malaysia' },
+      { code: 'ph', flag: '🇵🇭', name: 'Philippines' },
+      { code: 'tw', flag: '🇹🇼', name: 'Taiwan' },
+      { code: 'hk', flag: '🇭🇰', name: 'Hong Kong' },
+      { code: 'in', flag: '🇮🇳', name: 'India' },
+      { code: 'au', flag: '🇦🇺', name: 'Australia' },
+      { code: 'ca', flag: '🇨🇦', name: 'Canada' },
+      { code: 'de', flag: '🇩🇪', name: 'Germany' },
+      { code: 'fr', flag: '🇫🇷', name: 'France' },
+      { code: 'nl', flag: '🇳🇱', name: 'Netherlands' },
+      { code: 'br', flag: '🇧🇷', name: 'Brazil' },
+      { code: 'mx', flag: '🇲🇽', name: 'Mexico' },
+    ];
 
     function app() {
       return {
         // AI
-        provider: 'anthropic',
-        apiKey: '',
-        model: '',
-        showKey: false,
-        loadingModels: false,
-        modelError: '',
-        _keys:   { anthropic: '', openai: '', gemini: '' },
+        provider: 'anthropic', apiKey: '', model: '', showKey: false,
+        loadingModels: false, modelError: '',
+        _keys: { anthropic: '', openai: '', gemini: '' },
         _models: { anthropic: '', openai: '', gemini: '' },
         _modelLists: { anthropic: [], openai: [], gemini: [] },
 
-        // TikTok
-        msToken: '',
-        sourceMode: 'hashtag',
-        hashtags: ['gymstore', 'gym', 'supplement', 'protein', 'wheyprotein', 'fitness'],
-        newTag: '',
+        // User manager
+        userManagerOpen: false,
+        users: [],
+        newUser: { email: '', name: '', password: '', role: 'user' },
+        userManagerError: '',
+
+        // TikTok auth
+        msTokens: '',
+        numSessions: 1,
+        proxyEnabled: false,
+        proxyCountry: '',
+        proxyServer: '', proxyUsername: '', proxyPassword: '',
+        showProxyPass: false,
+        COUNTRIES,
+
+        // Auto-detected IP info
+        detectedIp: '',
+        detectedCountry: '',
+        detectedCountryName: '',
+        detectedCity: '',
+        checkingIp: false,
+        ipCheckError: '',
+
+        // msToken region + test
+        msTokenRegion: '',
+        testingScrape: false,
+        testResult: null,
+        testError: '',
+
+        // Sources (5)
+        useHashtags: true,
+        hashtags: ['gymstore', 'gym', 'supplement', 'protein', 'fitness'],
+        newHashtag: '',
+
+        useUrls: false,
         videoUrls: '',
+
+        useUsers: false,
+        usernames: [],
+        newUsername: '',
+
+        useKeywords: false,
+        keywords: [],
+        newKeyword: '',
+
+        useRelated: false,
+        relatedSeeds: '',
+        relatedCount: 20,
+
+        // Settings
         maxVideos: 30,
         maxComments: 80,
-
-        // WIN criteria
         minViews: 100000,
         minEngagementRate: 5,
         minCommentRate: 0.3,
         minLikeRate: 5,
 
         // Job
-        jobId: null,
-        status: 'idle',
-        logs: [],
-        videoCount: 0,
-        commentCount: 0,
-        report: null,
+        jobId: null, status: 'idle', logs: [],
+        videoCount: 0, commentCount: 0, report: null,
         _pollTimer: null,
 
         get isRunning() { return this.status === 'running' || this.status === 'analyzing'; },
         get renderedReport() { return this.report ? marked.parse(this.report) : ''; },
-        get availableModels() {
-          const live = this._modelLists[this.provider];
-          return live && live.length > 0 ? live : FALLBACK_MODELS[this.provider] || [];
-        },
+        get availableModels() { const live = this._modelLists[this.provider]; return live && live.length ? live : FALLBACK_MODELS[this.provider] || []; },
         get placeholderKey() { return PLACEHOLDER_KEYS[this.provider]; },
         get apiKeyLink() { return KEY_LINKS[this.provider]; },
-        get providerLabel() {
-          return { anthropic: 'Claude', openai: 'OpenAI', gemini: 'Gemini' }[this.provider] || this.provider;
+        get providerLabel() { return { anthropic: 'Claude', openai: 'OpenAI', gemini: 'Gemini' }[this.provider]; },
+        get msTokenList() { return this.msTokens.split('\n').map(s => s.trim()).filter(Boolean); },
+        get regionMismatch() {
+          if (!this.detectedCountry || !this.msTokenRegion) return false;
+          return this.detectedCountry.toLowerCase() !== this.msTokenRegion.toLowerCase();
         },
-        get videoUrlList() {
-          return this.videoUrls.split('\n').map(s => s.trim()).filter(s => /tiktok\.com/.test(s) && /\d{10,}/.test(s));
+        get videoUrlList() { return this.videoUrls.split('\n').map(s => s.trim()).filter(s => /tiktok\.com/.test(s) && /\d{10,}/.test(s)); },
+        get relatedSeedList() { return this.relatedSeeds.split('\n').map(s => s.trim()).filter(s => /tiktok\.com/.test(s) && /\d{10,}/.test(s)); },
+        get activeSourceCount() {
+          return [this.useHashtags && this.hashtags.length > 0,
+                  this.useUrls && this.videoUrlList.length > 0,
+                  this.useUsers && this.usernames.length > 0,
+                  this.useKeywords && this.keywords.length > 0,
+                  this.useRelated && this.relatedSeedList.length > 0].filter(Boolean).length;
         },
-        get canStart() {
-          if (this.sourceMode === 'hashtag') return this.hashtags.length > 0;
-          if (this.sourceMode === 'url') return this.videoUrlList.length > 0;
-          return this.hashtags.length > 0 && this.videoUrlList.length > 0;
+        get canStart() { return this.activeSourceCount > 0; },
+        get needsWinFilter() {
+          return (this.useHashtags && this.hashtags.length > 0)
+              || (this.useUsers && this.usernames.length > 0)
+              || (this.useKeywords && this.keywords.length > 0)
+              || (this.useRelated && this.relatedSeedList.length > 0);
         },
-        get sourceCount() {
-          if (this.sourceMode === 'url') return this.videoUrlList.length;
-          if (this.sourceMode === 'both') return this.hashtags.length + this.videoUrlList.length;
-          return this.hashtags.length;
+        get selectedCountry() {
+          return COUNTRIES.find(c => c.code === this.proxyCountry) || COUNTRIES[0];
         },
+        get selectedCountryFlag() { return this.selectedCountry.flag; },
+        get selectedCountryLabel() { return this.selectedCountry.code ? this.selectedCountry.name : 'Auto'; },
 
         init() {
-          const saved = localStorage.getItem('ttr_config_v2');
+          const saved = localStorage.getItem('ttr_config_v3');
           if (saved) {
             try {
               const c = JSON.parse(saved);
-              this.msToken = c.msToken || '';
-              this.provider = c.provider || 'anthropic';
-              this._keys = c.keys || this._keys;
-              this._models = c.models || this._models;
-              this._modelLists = c.modelLists || this._modelLists;
-              this.hashtags = c.hashtags || this.hashtags;
-              this.sourceMode = c.sourceMode || 'hashtag';
-              this.minViews = c.minViews ?? this.minViews;
-              this.minEngagementRate = c.minEngagementRate ?? this.minEngagementRate;
-              this.minCommentRate = c.minCommentRate ?? this.minCommentRate;
-              this.minLikeRate = c.minLikeRate ?? this.minLikeRate;
+              Object.assign(this, c);
             } catch (e) {}
           }
           this.apiKey = this._keys[this.provider] || '';
           this.model = this._models[this.provider] || (this.availableModels[0]?.id || '');
+          // Auto-detect outbound IP (direct hoặc qua proxy) lúc load
+          this.checkProxy();
         },
 
         setProvider(p) {
@@ -782,35 +1007,25 @@
 
         onKeyChange() {
           this.saveProviderConfig();
-          if (this.apiKey.trim().length > 20) {
-            this.fetchModels();
-          }
+          if (this.apiKey.trim().length > 20) this.fetchModels();
         },
 
         async fetchModels() {
           if (!this.apiKey.trim()) return;
-          this.loadingModels = true;
-          this.modelError = '';
+          this.loadingModels = true; this.modelError = '';
           try {
             const res = await fetch('/api/models', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ provider: this.provider, api_key: this.apiKey }),
             });
             const data = await res.json();
             if (data.error) { this.modelError = data.error; return; }
             this._modelLists[this.provider] = data.models || [];
-            // Reset model to first if current not in list
             const ids = (data.models || []).map(m => m.id);
-            if (!ids.includes(this.model) && ids.length > 0) {
-              this.model = ids[0];
-            }
+            if (!ids.includes(this.model) && ids.length > 0) this.model = ids[0];
             this.saveConfig();
-          } catch (e) {
-            this.modelError = e.message;
-          } finally {
-            this.loadingModels = false;
-          }
+          } catch (e) { this.modelError = e.message; }
+          finally { this.loadingModels = false; }
         },
 
         saveProviderConfig() {
@@ -820,13 +1035,16 @@
         },
 
         saveConfig() {
-          localStorage.setItem('ttr_config_v2', JSON.stringify({
-            msToken: this.msToken, provider: this.provider,
-            keys: this._keys, models: this._models, modelLists: this._modelLists,
-            hashtags: this.hashtags, sourceMode: this.sourceMode,
-            minViews: this.minViews, minEngagementRate: this.minEngagementRate,
-            minCommentRate: this.minCommentRate, minLikeRate: this.minLikeRate,
-          }));
+          const snap = {};
+          for (const k of [
+            'provider', '_keys', '_models', '_modelLists',
+            'msTokens', 'numSessions', 'proxyEnabled', 'proxyCountry', 'proxyServer', 'proxyUsername', 'proxyPassword',
+            'useHashtags', 'hashtags', 'useUrls', 'videoUrls',
+            'useUsers', 'usernames', 'useKeywords', 'keywords',
+            'useRelated', 'relatedSeeds', 'relatedCount',
+            'maxVideos', 'maxComments', 'minViews', 'minEngagementRate', 'minCommentRate', 'minLikeRate',
+          ]) snap[k] = this[k];
+          localStorage.setItem('ttr_config_v3', JSON.stringify(snap));
         },
 
         formatNum(n) {
@@ -835,36 +1053,52 @@
           return n.toString();
         },
 
-        addTag() {
-          const t = this.newTag.trim().replace(/^#/, '');
-          if (t && !this.hashtags.includes(t)) this.hashtags.push(t);
-          this.newTag = '';
+        addTo(listName, inputName, stripPattern) {
+          let v = this[inputName].trim();
+          if (stripPattern) v = v.replace(stripPattern, '');
+          if (v && !this[listName].includes(v)) this[listName].push(v);
+          this[inputName] = '';
           this.saveConfig();
         },
-        removeTag(i) { this.hashtags.splice(i, 1); this.saveConfig(); },
+        removeFrom(listName, i) { this[listName].splice(i, 1); this.saveConfig(); },
 
         async startScrape() {
-          if (!this.msToken.trim() || !this.canStart) return;
+          if (!this.canStart || this.msTokenList.length === 0) return;
           this.saveConfig();
           this.logs = []; this.report = null;
           this.videoCount = 0; this.commentCount = 0;
           this.status = 'running';
 
+          const body = {
+            ms_tokens: this.msTokens,
+            num_sessions: this.numSessions,
+            sources: {
+              hashtags: this.useHashtags ? this.hashtags : [],
+              video_urls: this.useUrls ? this.videoUrlList : [],
+              usernames: this.useUsers ? this.usernames : [],
+              keywords: this.useKeywords ? this.keywords : [],
+              related_seeds: this.useRelated ? this.relatedSeedList : [],
+            },
+            related_count: this.relatedCount,
+            max_videos: this.maxVideos,
+            max_comments: this.maxComments,
+            min_views: this.minViews,
+            min_engagement_rate: this.minEngagementRate,
+            min_comment_rate: this.minCommentRate,
+            min_like_rate: this.minLikeRate,
+          };
+          if (this.proxyEnabled && this.proxyServer.trim()) {
+            body.proxy = {
+              server: this.proxyServer,
+              username: this.proxyUsername,
+              password: this.proxyPassword,
+              country: this.proxyCountry,
+            };
+          }
+
           try {
             const res = await fetch('/api/scrape', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ms_token: this.msToken,
-                source_mode: this.sourceMode,
-                hashtags: this.hashtags,
-                video_urls: this.videoUrlList,
-                max_videos: this.maxVideos,
-                max_comments: this.maxComments,
-                min_views: this.minViews,
-                min_engagement_rate: this.minEngagementRate,
-                min_comment_rate: this.minCommentRate,
-                min_like_rate: this.minLikeRate,
-              }),
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.error) { this.logs.push('Error: ' + data.error); this.status = 'idle'; return; }
@@ -875,9 +1109,7 @@
           }
         },
 
-        _startPolling() {
-          this._pollTimer = setInterval(() => this._poll(), 2000);
-        },
+        _startPolling() { this._pollTimer = setInterval(() => this._poll(), 2000); },
 
         async _poll() {
           if (!this.jobId) return;
@@ -889,13 +1121,8 @@
             this.commentCount = data.comment_count || 0;
             this.status = data.status;
             if (data.report) this.report = data.report;
-            if (data.status === 'done' || data.status === 'analyzed' || data.status === 'error') {
-              clearInterval(this._pollTimer);
-            }
-            this.$nextTick(() => {
-              const box = this.$refs.logBox;
-              if (box) box.scrollTop = box.scrollHeight;
-            });
+            if (['done','analyzed','error'].includes(data.status)) clearInterval(this._pollTimer);
+            this.$nextTick(() => { const box = this.$refs.logBox; if (box) box.scrollTop = box.scrollHeight; });
           } catch (e) { console.error(e); }
         },
 
@@ -910,14 +1137,114 @@
             const data = await res.json();
             if (data.error) { this.logs.push('Error: ' + data.error); this.status = 'done'; return; }
             this._startPolling();
-          } catch (e) {
-            this.logs.push('Error: ' + e.message); this.status = 'done';
+          } catch (e) { this.logs.push('Error: ' + e.message); this.status = 'done'; }
+        },
+
+        download(type) { if (this.jobId) window.location.href = `/api/jobs/${this.jobId}/download/${type}`; },
+
+        // ─── IP auto-detect ───
+        countryFlag(code) {
+          if (!code) return '🌐';
+          const c = code.toUpperCase();
+          if (c.length !== 2) return '🌐';
+          // Convert ISO country code to flag emoji via regional indicator symbols
+          return String.fromCodePoint(...[...c].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
+        },
+        async testScrape() {
+          this.testingScrape = true;
+          this.testResult = null;
+          this.testError = '';
+          try {
+            const first = this.msTokenList[0];
+            if (!first) { this.testError = 'Cần ít nhất 1 msToken'; return; }
+            const body = { ms_token: first };
+            if (this.proxyEnabled && this.proxyServer.trim()) {
+              body.proxy = {
+                server: this.proxyServer,
+                username: this.proxyUsername,
+                password: this.proxyPassword,
+              };
+            }
+            const res = await fetch('/api/test-scrape', {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error && !data.stage) {
+              this.testError = data.error;
+            } else {
+              this.testResult = data;
+            }
+          } catch(e) {
+            this.testError = e.message;
+          } finally {
+            this.testingScrape = false;
           }
         },
 
-        download(type) {
-          if (!this.jobId) return;
-          window.location.href = `/api/jobs/${this.jobId}/download/${type}`;
+        async checkProxy() {
+          this.checkingIp = true;
+          this.ipCheckError = '';
+          try {
+            const body = this.proxyEnabled ? {
+              server: this.proxyServer, username: this.proxyUsername, password: this.proxyPassword,
+            } : {};
+            const res = await fetch('/api/proxy/check', {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error) {
+              this.ipCheckError = data.error;
+              this.detectedIp = ''; this.detectedCountry = ''; this.detectedCountryName = ''; this.detectedCity = '';
+            } else {
+              this.detectedIp = data.ip || '';
+              this.detectedCountry = data.country || '';
+              this.detectedCountryName = data.country_name || '';
+              this.detectedCity = data.city || '';
+            }
+          } catch(e) {
+            this.ipCheckError = e.message;
+          } finally {
+            this.checkingIp = false;
+          }
+        },
+
+        // ─── User management ───
+        async openUserManager() {
+          this.userManagerOpen = true;
+          await this.loadUsers();
+        },
+        async loadUsers() {
+          try {
+            const res = await fetch('/auth/users');
+            const data = await res.json();
+            if (data.users) this.users = data.users;
+          } catch(e) { console.error(e); }
+        },
+        async addUser() {
+          this.userManagerError = '';
+          if (!this.newUser.email || !this.newUser.password) {
+            this.userManagerError = 'Cần email + password';
+            return;
+          }
+          try {
+            const res = await fetch('/auth/users', {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(this.newUser),
+            });
+            const data = await res.json();
+            if (data.error) { this.userManagerError = data.error; return; }
+            this.newUser = { email:'', name:'', password:'', role:'user' };
+            await this.loadUsers();
+          } catch(e) { this.userManagerError = e.message; }
+        },
+        async deleteUser(email) {
+          if (!confirm(`Xóa user ${email}?`)) return;
+          try {
+            await fetch(`/auth/users/${encodeURIComponent(email)}`, { method: 'DELETE' });
+            await this.loadUsers();
+          } catch(e) { console.error(e); }
         },
       };
     }
