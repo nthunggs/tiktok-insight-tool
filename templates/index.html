@@ -336,25 +336,33 @@
 
         <textarea x-model="msTokens" @input.debounce.500ms="saveConfig()" rows="3" placeholder="msToken thứ nhất&#10;msToken thứ hai (nếu multi-session)&#10;..." class="input input-mono resize-none" :disabled="isRunning"></textarea>
 
-        <!-- Auto fetch msToken -->
-        <div class="mt-2 flex items-center gap-2">
-          <button @click="autoFetchToken(numSessions || 1)" :disabled="autoFetchingToken || isRunning"
-                  class="text-[11px] font-semibold px-3 py-1.5 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap">
-            <svg x-show="!autoFetchingToken" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
-            <svg x-show="autoFetchingToken" class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none">
+        <!-- Auto fetch msToken: button stretch full + count stepper bên phải -->
+        <div class="mt-2 flex items-stretch gap-2">
+          <button @click="autoFetchToken(autoTokenCount)" :disabled="autoFetchingToken || isRunning"
+                  class="flex-1 text-[12px] font-semibold px-3 py-2 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-1.5">
+            <svg x-show="!autoFetchingToken" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+            <svg x-show="autoFetchingToken" class="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/>
               <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
             </svg>
-            <span x-text="autoFetchingToken ? 'Đang lấy...' : '🔄 Auto lấy msToken'"></span>
+            <span x-text="autoFetchingToken ? 'Đang lấy...' : 'Tự động fill msToken'"></span>
           </button>
-          <span class="text-[10.5px] text-muted-fg">Tự visit tiktok.com qua proxy hiện tại</span>
+          <!-- Count stepper -->
+          <div class="inline-flex items-center bg-muted/60 rounded-md overflow-hidden border border-border shrink-0">
+            <button @click="autoTokenCount = Math.max(1, autoTokenCount - 1)" :disabled="autoFetchingToken"
+                    class="px-2.5 h-full text-fg hover:bg-muted disabled:opacity-40 text-[15px] leading-none">−</button>
+            <span class="px-2.5 text-[12px] font-semibold tabular-nums min-w-[18px] text-center" x-text="autoTokenCount"></span>
+            <button @click="autoTokenCount = Math.min(5, autoTokenCount + 1)" :disabled="autoFetchingToken"
+                    class="px-2.5 h-full text-fg hover:bg-muted disabled:opacity-40 text-[15px] leading-none">+</button>
+          </div>
         </div>
+        <div class="mt-1 text-[10.5px] text-muted-fg">Lấy <span x-text="autoTokenCount" class="font-semibold text-fg"></span> token (1–5). Tự visit tiktok.com qua proxy hiện tại.</div>
         <div x-show="autoTokenMsg" x-cloak class="mt-1 text-[11px]" :class="autoTokenError ? 'text-red-600' : 'text-emerald-600'" x-text="autoTokenMsg"></div>
 
         <!-- Region + Test bar -->
         <div class="mt-2.5 grid grid-cols-[1fr_auto] gap-2">
           <div class="flex items-center gap-1.5">
-            <label class="text-[10.5px] text-muted-fg whitespace-nowrap">Lấy ở:</label>
+            <label class="text-[10.5px] text-muted-fg whitespace-nowrap">Country Scrape:</label>
             <select x-model="msTokenRegion" @change="saveConfig()" class="input" style="padding:5px 8px; font-size:11px">
               <option value="">— Chọn —</option>
               <template x-for="c in COUNTRIES" :key="c.code">
@@ -416,75 +424,69 @@
 
         <div x-show="testError" x-cloak class="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700" x-text="testError"></div>
 
-        <!-- Important callout -->
-        <div class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-3 py-2.5 text-[11px] text-blue-900 flex gap-2.5">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div>
-            <strong class="font-semibold">Có nhiều cookie tên <code class="bg-blue-100 px-1 rounded">msToken</code>?</strong> Chọn cái có:
-            <ul class="mt-1 space-y-0.5 list-disc list-inside ml-0.5">
-              <li>Domain = <code class="bg-blue-100 px-1 rounded">.tiktok.com</code> (có dấu chấm đầu)</li>
-              <li>Value dài nhất (~150 ký tự)</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Browser guide tabs -->
-        <details class="mt-3" x-data="{ tab: 'mac-chrome' }">
-          <summary class="cursor-pointer select-none list-none">
-            <div class="flex items-center justify-between text-[11px] font-medium text-primary hover:underline">
-              <span class="flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transition-transform"><polyline points="9 18 15 12 9 6"/></svg>
-                Hướng dẫn lấy msToken
-              </span>
-            </div>
+        <!-- Hướng dẫn & lưu ý (gom toàn bộ) -->
+        <details class="mt-3 rounded-md border border-border bg-muted/30 overflow-hidden group" x-data="{ tab: 'mac-chrome' }">
+          <summary class="cursor-pointer select-none list-none px-3 py-2 flex items-center justify-between hover:bg-muted/60 transition">
+            <span class="flex items-center gap-1.5 text-[11.5px] font-semibold text-fg">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform group-open:rotate-90"><polyline points="9 18 15 12 9 6"/></svg>
+              Hướng dẫn &amp; lưu ý
+            </span>
+            <span class="text-[10px] text-muted-fg group-open:hidden">Click để xem</span>
           </summary>
 
-          <div class="mt-3">
-            <div class="seg mb-3">
-              <button @click="tab='mac-chrome'" :class="['seg-btn', tab==='mac-chrome' && 'active']">macOS · Chrome</button>
-              <button @click="tab='win-chrome'" :class="['seg-btn', tab==='win-chrome' && 'active']">Windows · Chrome</button>
-              <button @click="tab='safari'" :class="['seg-btn', tab==='safari' && 'active']">Safari</button>
+          <div class="px-3 pb-3 pt-1 space-y-3 border-t border-border">
+            <!-- Tip: chọn cookie nào -->
+            <div class="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] text-blue-900 flex gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div>
+                Có nhiều cookie tên <code class="bg-blue-100 px-1 rounded">msToken</code>? Chọn cái có:
+                Domain = <code class="bg-blue-100 px-1 rounded">.tiktok.com</code> (chấm đầu) + Value dài nhất (~150 ký tự).
+              </div>
             </div>
 
-            <div x-show="tab==='mac-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
-              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
-                <li>Mở Chrome/Brave/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
-                <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → DevTools</li>
-                <li>Tab <strong>Application</strong> (bấm <kbd>»</kbd> nếu ẩn)</li>
-                <li>Sidebar: <strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
-                <li>Tìm hàng Name = <code>msToken</code>, Domain = <code>.tiktok.com</code></li>
-                <li>Copy ô <strong>Value</strong></li>
-              </ol>
+            <!-- Browser tabs -->
+            <div>
+              <div class="seg mb-2">
+                <button @click="tab='mac-chrome'" :class="['seg-btn', tab==='mac-chrome' && 'active']">macOS · Chrome</button>
+                <button @click="tab='win-chrome'" :class="['seg-btn', tab==='win-chrome' && 'active']">Windows · Chrome</button>
+                <button @click="tab='safari'" :class="['seg-btn', tab==='safari' && 'active']">Safari</button>
+              </div>
+
+              <div x-show="tab==='mac-chrome'" class="rounded-md border border-border bg-white p-3">
+                <ol class="space-y-1 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                  <li>Mở Chrome/Brave/Edge → <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                  <li>Nhấn <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> → DevTools</li>
+                  <li>Tab <strong>Application</strong> → <strong>Storage → Cookies</strong> → <code>https://www.tiktok.com</code></li>
+                  <li>Tìm <code>msToken</code> Domain <code>.tiktok.com</code> → copy <strong>Value</strong></li>
+                </ol>
+              </div>
+
+              <div x-show="tab==='win-chrome'" class="rounded-md border border-border bg-white p-3">
+                <ol class="space-y-1 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                  <li>Mở Chrome/Edge → <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
+                  <li>Nhấn <kbd>F12</kbd> hoặc <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></li>
+                  <li>Tab <strong>Application</strong> → <strong>Storage → Cookies</strong> → <code>https://www.tiktok.com</code></li>
+                  <li>Tìm <code>msToken</code> Domain <code>.tiktok.com</code> → copy <strong>Value</strong></li>
+                </ol>
+              </div>
+
+              <div x-show="tab==='safari'" class="rounded-md border border-border bg-white p-3">
+                <ol class="space-y-1 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
+                  <li>Safari → Settings → <strong>Advanced</strong> → tick <em>"Show Develop menu"</em></li>
+                  <li>Mở <code>tiktok.com</code> → đăng nhập</li>
+                  <li>Menu <strong>Develop</strong> → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
+                  <li><strong>Storage → Cookies</strong> → <code>tiktok.com</code> → <code>msToken</code> Domain <code>.tiktok.com</code> → copy Value</li>
+                </ol>
+              </div>
             </div>
 
-            <div x-show="tab==='win-chrome'" class="rounded-md border border-border bg-muted/30 p-3">
-              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
-                <li>Mở Chrome/Edge → vào <code>tiktok.com</code> → <strong>đăng nhập</strong></li>
-                <li>Nhấn <kbd>F12</kbd> hoặc <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></li>
-                <li>Tab <strong>Application</strong></li>
-                <li><strong>Storage → Cookies →</strong> <code>https://www.tiktok.com</code></li>
-                <li>Tìm <code>msToken</code> với Domain <code>.tiktok.com</code></li>
-                <li>Copy <strong>Value</strong></li>
-              </ol>
-            </div>
-
-            <div x-show="tab==='safari'" class="rounded-md border border-border bg-muted/30 p-3">
-              <ol class="space-y-1.5 text-[11.5px] text-muted-fg list-decimal list-inside leading-relaxed">
-                <li>Safari → Settings → <strong>Advanced</strong> → tick <em>"Show Develop menu"</em></li>
-                <li>Mở <code>tiktok.com</code> → đăng nhập</li>
-                <li>Menu <strong>Develop</strong> → Show Web Inspector (<kbd>⌘⌥I</kbd>)</li>
-                <li>Tab <strong>Storage</strong> → Cookies → <code>tiktok.com</code></li>
-                <li>Tìm <code>msToken</code> Domain <code>.tiktok.com</code> → copy Value</li>
-              </ol>
+            <!-- Warning -->
+            <div class="rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div>Token hết hạn sau vài giờ → gặp lỗi auth thì lấy lại. <strong>Multi-session cần token từ nhiều tài khoản TikTok khác nhau.</strong></div>
             </div>
           </div>
         </details>
-
-        <!-- Warnings -->
-        <div class="mt-3 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div>Token hết hạn sau vài giờ → gặp lỗi auth thì lấy lại. <strong>Multi-session cần nhiều token từ nhiều tài khoản TikTok khác nhau</strong>.</div>
-        </div>
       </div>
 
       <!-- ─── SOURCES (5 modes) ─── -->
@@ -805,7 +807,7 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-fg"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
             <span class="text-[11.5px] font-semibold text-fg">Live log</span>
           </div>
-          <button @click="logs = []" class="text-[11px] text-muted-fg hover:text-fg">Clear</button>
+          <button @click="clearJob()" class="text-[11px] text-muted-fg hover:text-red-600">Clear</button>
         </div>
         <div class="log-box p-4 h-72 overflow-y-auto" x-ref="logBox">
           <template x-if="logs.length === 0"><p class="text-muted-fg">Sẵn sàng. Nhấn "Bắt đầu Scrape"...</p></template>
@@ -965,6 +967,7 @@
         autoFetchingToken: false,
         autoTokenMsg: '',
         autoTokenError: false,
+        autoTokenCount: 1,
 
         // Sources (5)
         useHashtags: true,
@@ -1049,6 +1052,23 @@
           }
           this.apiKey = this._keys[this.provider] || '';
           this.model = this._models[this.provider] || (this.availableModels[0]?.id || '');
+          // Restore job state nếu có saved gần đây (< 24h)
+          try {
+            const savedJob = JSON.parse(localStorage.getItem('ttr_job_v3') || '{}');
+            const age = Date.now() - (savedJob.savedAt || 0);
+            if (savedJob.jobId && age < 86400000) {  // 24h
+              this.jobId = savedJob.jobId;
+              this.status = savedJob.status || 'idle';
+              this.logs = savedJob.logs || [];
+              this.report = savedJob.report || null;
+              this.videoCount = savedJob.videoCount || 0;
+              this.commentCount = savedJob.commentCount || 0;
+              // Resume polling nếu job chưa done
+              if (['running', 'analyzing'].includes(this.status)) {
+                this._startPolling();
+              }
+            }
+          } catch(e) {}
           // Auto-detect outbound IP (direct hoặc qua proxy) lúc load
           this.checkProxy();
         },
@@ -1103,6 +1123,30 @@
             'maxVideos', 'maxComments', 'dedupVideos', 'minViews', 'minEngagementRate', 'minCommentRate', 'minLikeRate',
           ]) snap[k] = this[k];
           localStorage.setItem('ttr_config_v3', JSON.stringify(snap));
+        },
+
+        saveJob() {
+          // Persist job state để qua F5 / restart vẫn còn log + report
+          localStorage.setItem('ttr_job_v3', JSON.stringify({
+            jobId: this.jobId,
+            status: this.status,
+            videoCount: this.videoCount,
+            commentCount: this.commentCount,
+            report: this.report,
+            logs: (this.logs || []).slice(-300),  // keep last 300 lines
+            savedAt: Date.now(),
+          }));
+        },
+
+        clearJob() {
+          if (!confirm('Xoá job hiện tại + log + report?')) return;
+          this.jobId = null;
+          this.status = 'idle';
+          this.logs = [];
+          this.report = null;
+          this.videoCount = 0;
+          this.commentCount = 0;
+          localStorage.removeItem('ttr_job_v3');
         },
 
         formatNum(n) {
@@ -1162,6 +1206,7 @@
             const data = await res.json();
             if (data.error) { this.logs.push('Error: ' + data.error); this.status = 'idle'; return; }
             this.jobId = data.job_id;
+            this.saveJob();
             this._startPolling();
           } catch (e) {
             this.logs.push('Connection error: ' + e.message); this.status = 'idle';
@@ -1175,11 +1220,17 @@
           try {
             const res = await fetch(`/api/jobs/${this.jobId}`);
             const data = await res.json();
+            if (data.error) {
+              // Backend không tìm thấy job (Flask restart) → clear local state
+              clearInterval(this._pollTimer);
+              return;
+            }
             this.logs = data.logs || [];
             this.videoCount = data.video_count || 0;
             this.commentCount = data.comment_count || 0;
             this.status = data.status;
             if (data.report) this.report = data.report;
+            this.saveJob();  // persist mỗi lần poll update
             if (['done','analyzed','error'].includes(data.status)) clearInterval(this._pollTimer);
             this.$nextTick(() => { const box = this.$refs.logBox; if (box) box.scrollTop = box.scrollHeight; });
           } catch (e) { console.error(e); }

@@ -165,7 +165,7 @@ def auto_fetch_mstoken():
     """Tự launch CloakBrowser → visit tiktok.com → extract msToken từ cookies."""
     data = request.json or {}
     proxy_cfg = data.get("proxy") or {}
-    count = max(1, min(int(data.get("count", 1)), 3))  # 1-3 tokens
+    count = max(1, min(int(data.get("count", 1)), 5))  # 1-5 tokens
 
     proxy_arg = None
     if proxy_cfg.get("server", "").strip():

@@ -40,6 +40,7 @@ logs/
 playwright-report/
 test-results/
 browser_profile/
+browser_profile_keyword/
 
 # CloakBrowser binary cache (~200MB, user home)
 .cloakbrowser/
