@@ -159,10 +159,20 @@
         <div class="h-5 w-px bg-border mx-1 hidden md:block"></div>
         <div x-data="{ open: false }" @click.outside="open = false" class="relative">
           <button @click="open = !open" class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/70 transition">
+            {% if user_avatar %}
+            <img src="{{ user_avatar }}" alt="{{ user_name }}"
+                 class="w-7 h-7 rounded-full object-cover border border-border"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+            <div class="w-7 h-7 rounded-full items-center justify-center text-[11px] font-bold text-white hidden"
+                 style="background:linear-gradient(135deg,#8b5cf6,#3b82f6)">
+              {{ (user_name or user_email or 'A')[0]|upper }}
+            </div>
+            {% else %}
             <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
                  style="background:linear-gradient(135deg,#8b5cf6,#3b82f6)">
               {{ (user_name or user_email or 'A')[0]|upper }}
             </div>
+            {% endif %}
             <div class="hidden md:flex flex-col items-start leading-tight">
               <span class="text-[11.5px] font-semibold text-fg">{{ user_name or 'Admin' }}</span>
               <span class="text-[10px] text-muted-fg">{{ user_role or 'user' }}</span>
@@ -225,7 +235,13 @@
         <div class="space-y-2">
           <template x-for="u in users" :key="u.email">
             <div class="card p-3 flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+              <template x-if="u.avatar_url">
+                <img :src="u.avatar_url" :alt="u.name"
+                     class="w-9 h-9 rounded-full object-cover border border-border shrink-0"
+                     @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'" />
+              </template>
+              <div x-show="!u.avatar_url"
+                   class="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
                    :style="`background:linear-gradient(135deg, ${u.role === 'admin' ? '#f97316,#ec4899' : '#8b5cf6,#3b82f6'})`"
                    x-text="(u.name || u.email)[0].toUpperCase()"></div>
               <div class="flex-1 min-w-0">
@@ -575,7 +591,6 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
               </div>
-              <div class="text-[10.5px] text-amber-600 mt-1.5">⚠ Search endpoint hay bị rate-limit</div>
             </div>
           </div>
 
@@ -610,24 +625,24 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
           Tiêu chí WIN
         </div>
-        <p class="text-[11px] text-muted-fg -mt-2 mb-3">Áp dụng cho hashtag/user/keyword/related. URL không filter.</p>
+        <p class="text-[11px] text-muted-fg -mt-2 mb-3">Áp dụng cho <strong>hashtag / keyword / related</strong>. URL và User mode tự động lấy tất cả (không filter).</p>
 
         <div class="space-y-3.5">
           <div>
             <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min views</span><span class="font-medium text-fg" x-text="formatNum(minViews)"></span></div>
-            <input type="range" min="10000" max="1000000" step="10000" x-model.number="minViews" :disabled="isRunning" />
+            <input type="range" min="1000" max="1000000" step="1000" x-model.number="minViews" :disabled="isRunning" />
           </div>
           <div>
             <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min engagement</span><span class="font-medium text-fg" x-text="minEngagementRate + '%'"></span></div>
-            <input type="range" min="1" max="20" step="0.5" x-model.number="minEngagementRate" :disabled="isRunning" />
+            <input type="range" min="0.01" max="20" step="0.01" x-model.number="minEngagementRate" :disabled="isRunning" />
           </div>
           <div>
             <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min comment rate <span class="text-[10px] text-amber-600 font-medium ml-0.5">★</span></span><span class="font-medium text-fg" x-text="minCommentRate + '%'"></span></div>
-            <input type="range" min="0.1" max="2" step="0.1" x-model.number="minCommentRate" :disabled="isRunning" />
+            <input type="range" min="0.01" max="2" step="0.01" x-model.number="minCommentRate" :disabled="isRunning" />
           </div>
           <div>
             <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Min like rate</span><span class="font-medium text-fg" x-text="minLikeRate + '%'"></span></div>
-            <input type="range" min="1" max="20" step="0.5" x-model.number="minLikeRate" :disabled="isRunning" />
+            <input type="range" min="0.01" max="20" step="0.01" x-model.number="minLikeRate" :disabled="isRunning" />
           </div>
         </div>
       </div>
@@ -647,6 +662,14 @@
             <div class="flex justify-between text-[11px] mb-1.5"><span class="text-muted-fg">Comment / video</span><span class="font-medium text-fg" x-text="maxComments"></span></div>
             <input type="range" min="20" max="200" step="10" x-model.number="maxComments" :disabled="isRunning" />
           </div>
+          <!-- Dedup video toggle -->
+          <label class="flex items-start gap-2.5 cursor-pointer pt-1">
+            <input type="checkbox" x-model="dedupVideos" @change="saveConfig()" class="accent-primary mt-0.5" :disabled="isRunning" />
+            <div class="flex-1">
+              <div class="text-[11.5px] font-medium text-fg">Bỏ video trùng giữa các nguồn</div>
+              <div class="text-[10.5px] text-muted-fg">Nếu 1 video xuất hiện ở hashtag + user → chỉ scrape 1 lần. Tắt nếu muốn weight cho video phổ biến.</div>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -945,7 +968,7 @@
 
         // Sources (5)
         useHashtags: true,
-        hashtags: ['fyp', 'viral', 'trending'],
+        hashtags: [],
         newHashtag: '',
 
         useUrls: false,
@@ -966,6 +989,7 @@
         // Settings
         maxVideos: 30,
         maxComments: 80,
+        dedupVideos: true,
         minViews: 100000,
         minEngagementRate: 5,
         minCommentRate: 0.3,
@@ -998,8 +1022,9 @@
         },
         get canStart() { return this.activeSourceCount > 0; },
         get needsWinFilter() {
+          // URL + User: user chủ động chọn → lấy tất, không cần filter
+          // Hashtag/Keyword/Related: auto trả mass content → cần filter
           return (this.useHashtags && this.hashtags.length > 0)
-              || (this.useUsers && this.usernames.length > 0)
               || (this.useKeywords && this.keywords.length > 0)
               || (this.useRelated && this.relatedSeedList.length > 0);
         },
@@ -1016,6 +1041,11 @@
               const c = JSON.parse(saved);
               Object.assign(this, c);
             } catch (e) {}
+          }
+          // Migrate: clear hashtags ví dụ cũ (Gymstore/fyp defaults) — anh muốn user tự nhập
+          const oldDefaults = ['gymstore', 'gym', 'supplement', 'protein', 'wheyprotein', 'fitness', 'fyp', 'viral', 'trending'];
+          if (Array.isArray(this.hashtags) && this.hashtags.length > 0 && this.hashtags.every(h => oldDefaults.includes(h))) {
+            this.hashtags = [];
           }
           this.apiKey = this._keys[this.provider] || '';
           this.model = this._models[this.provider] || (this.availableModels[0]?.id || '');
@@ -1070,7 +1100,7 @@
             'useHashtags', 'hashtags', 'useUrls', 'videoUrls',
             'useUsers', 'usernames', 'useKeywords', 'keywords',
             'useRelated', 'relatedSeeds', 'relatedCount',
-            'maxVideos', 'maxComments', 'minViews', 'minEngagementRate', 'minCommentRate', 'minLikeRate',
+            'maxVideos', 'maxComments', 'dedupVideos', 'minViews', 'minEngagementRate', 'minCommentRate', 'minLikeRate',
           ]) snap[k] = this[k];
           localStorage.setItem('ttr_config_v3', JSON.stringify(snap));
         },
@@ -1110,6 +1140,7 @@
             related_count: this.relatedCount,
             max_videos: this.maxVideos,
             max_comments: this.maxComments,
+            dedup_videos: this.dedupVideos,
             min_views: this.minViews,
             min_engagement_rate: this.minEngagementRate,
             min_comment_rate: this.minCommentRate,

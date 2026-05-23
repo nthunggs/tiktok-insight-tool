@@ -135,8 +135,13 @@ def get_country_profile(country: str = None) -> dict:
     return COUNTRY_PROFILES["vn"]
 
 
-async def _launch_persistent(playwright, ms_token=None, proxy=None, country=None):
+async def _launch_persistent(playwright, ms_token=None, proxy=None, country=None,
+                              data_dir=None):
     """Persistent context — lưu cookies/session giữa lần chạy.
+
+    Args:
+      data_dir: override profile dir (default BROWSER_DATA_DIR). Truyền dir khác
+                khi launch song song nhiều browser tránh ProcessSingleton conflict.
 
     ENV overrides:
       TIKTOK_HEADLESS  - "true"/"false" (default false)
@@ -144,7 +149,16 @@ async def _launch_persistent(playwright, ms_token=None, proxy=None, country=None
       TIKTOK_ENGINE    - "cloak" (default, anti-detect mạnh) / "playwright" (fallback)
       TIKTOK_HUMANIZE  - "true" (default) — human-like mouse/keyboard pattern (cloak only)
     """
-    os.makedirs(BROWSER_DATA_DIR, exist_ok=True)
+    profile_dir = data_dir or BROWSER_DATA_DIR
+    os.makedirs(profile_dir, exist_ok=True)
+    # Clear stale singleton locks (từ crash trước)
+    for fn in ("SingletonLock", "SingletonSocket", "SingletonCookie"):
+        try:
+            os.remove(os.path.join(profile_dir, fn))
+        except FileNotFoundError:
+            pass
+        except Exception:
+            pass
 
     headless = os.environ.get("TIKTOK_HEADLESS", "false").lower() == "true"
     channel = os.environ.get("TIKTOK_CHANNEL", "chrome")
@@ -158,7 +172,7 @@ async def _launch_persistent(playwright, ms_token=None, proxy=None, country=None
         try:
             import cloakbrowser
             cloak_kwargs = dict(
-                user_data_dir=BROWSER_DATA_DIR,
+                user_data_dir=profile_dir,
                 headless=headless,
                 stealth_args=True,
                 user_agent=os.environ.get("TIKTOK_USER_AGENT") or None,  # cloak có UA hợp lý mặc định
@@ -177,7 +191,7 @@ async def _launch_persistent(playwright, ms_token=None, proxy=None, country=None
             logger.warning(f"CloakBrowser fail → fallback Playwright: {e}")
 
     kwargs = dict(
-        user_data_dir=BROWSER_DATA_DIR,
+        user_data_dir=profile_dir,
         headless=headless,
         args=[
             "--no-sandbox",
@@ -384,7 +398,7 @@ async def _collect_from_responses(page, collected: list, limit: int,
 
 
 async def crawl_user_videos(username: str, limit: int = 30,
-                             ms_token: str = None, proxy: dict = None, country: str = None) -> dict:
+                             ms_token: str = None, proxy: dict = None, country: str = None, data_dir: str = None) -> dict:
     # Xử lý nếu user paste cả URL
     if "tiktok.com/@" in username:
         username = username.split("tiktok.com/@")[-1].split("?")[0].strip("/")
@@ -394,7 +408,7 @@ async def crawl_user_videos(username: str, limit: int = 30,
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as pw:
-            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country)
+            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country, data_dir=data_dir)
             page = await ctx.new_page()
 
             # Gắn listener TRƯỚC khi goto
@@ -446,13 +460,13 @@ async def crawl_user_videos(username: str, limit: int = 30,
 
 
 async def crawl_by_hashtag(tag: str, limit: int = 30,
-                            ms_token: str = None, proxy: dict = None, country: str = None) -> dict:
+                            ms_token: str = None, proxy: dict = None, country: str = None, data_dir: str = None) -> dict:
     tag = tag.lstrip("#")
     collected: list = []
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as pw:
-            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country)
+            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country, data_dir=data_dir)
             page = await ctx.new_page()
 
             await _collect_from_responses(
@@ -497,13 +511,13 @@ async def crawl_by_hashtag(tag: str, limit: int = 30,
 
 
 async def crawl_by_keyword(keyword: str, limit: int = 30,
-                            ms_token: str = None, proxy: dict = None, country: str = None) -> dict:
+                            ms_token: str = None, proxy: dict = None, country: str = None, data_dir: str = None) -> dict:
     collected: list = []
     try:
         from playwright.async_api import async_playwright
         import urllib.parse
         async with async_playwright() as pw:
-            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country)
+            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country, data_dir=data_dir)
             page = await ctx.new_page()
 
             await _collect_from_responses(
@@ -549,12 +563,12 @@ async def crawl_by_keyword(keyword: str, limit: int = 30,
 
 
 async def crawl_video_comments(video_url: str, limit: int = 50,
-                                ms_token: str = None, proxy: dict = None, country: str = None) -> dict:
+                                ms_token: str = None, proxy: dict = None, country: str = None, data_dir: str = None) -> dict:
     collected: list = []
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as pw:
-            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country)
+            ctx  = await _launch_persistent(pw, ms_token, proxy=proxy, country=country, data_dir=data_dir)
             page = await ctx.new_page()
 
             async def on_response(response):
@@ -645,14 +659,14 @@ async def crawl_video_comments(video_url: str, limit: int = 50,
 
 
 async def crawl_video_with_comments(video_url: str, comment_limit: int = 50,
-                                     ms_token: str = None, proxy: dict = None, country: str = None) -> dict:
+                                     ms_token: str = None, proxy: dict = None, country: str = None, data_dir: str = None) -> dict:
     """Load video URL → extract video info từ page state + intercept comments cùng lúc."""
     comments: list = []
     video_info = None
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as pw:
-            ctx = await _launch_persistent(pw, ms_token, proxy=proxy, country=country)
+            ctx = await _launch_persistent(pw, ms_token, proxy=proxy, country=country, data_dir=data_dir)
             page = await ctx.new_page()
 
             async def on_response(response):

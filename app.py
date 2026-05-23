@@ -26,7 +26,17 @@ def _load_dotenv(path: str = ".env") -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, _, v = line.partition("=")
-        k, v = k.strip(), v.strip().strip('"').strip("'")
+        v = v.strip()
+        # Strip inline comments (chỉ khi không nằm trong quote)
+        if v and not (v.startswith('"') or v.startswith("'")):
+            # Tìm " #" hoặc "\t#" (có space/tab trước #) để cắt
+            for sep in (" #", "\t#"):
+                idx = v.find(sep)
+                if idx > 0:
+                    v = v[:idx].strip()
+                    break
+        v = v.strip('"').strip("'")
+        k = k.strip()
         if k and k not in os.environ:
             os.environ[k] = v
 
@@ -145,6 +155,7 @@ def index():
         user_email=session.get("user_email"),
         user_name=session.get("user_name"),
         user_role=session.get("user_role"),
+        user_avatar=session.get("user_avatar") or "",
     )
 
 
@@ -489,6 +500,7 @@ def start_scrape():
 
     max_videos = max(1, min(int(data.get("max_videos", 30)), 100))
     max_comments = max(1, min(int(data.get("max_comments", 80)), 200))
+    dedup_videos = bool(data.get("dedup_videos", True))
 
     criteria = {
         "min_views": int(data.get("min_views", 100_000)),
@@ -514,7 +526,7 @@ def start_scrape():
     thread = threading.Thread(
         target=lambda: asyncio.run(_scrape_job(
             job_id, ms_tokens, num_sessions, proxies, proxy_country, sources,
-            related_count, max_videos, max_comments, criteria,
+            related_count, max_videos, max_comments, criteria, dedup_videos,
         )),
         daemon=True,
     )
@@ -640,11 +652,15 @@ def _scraper_stats(v: dict) -> dict:
 
 
 async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, sources,
-                       related_count, max_videos, max_comments, criteria):
+                       related_count, max_videos, max_comments, criteria, dedup_videos=True):
     job = jobs[job_id]
+    job["_seen_video_ids"] = set()
 
     def log(msg):
         job["logs"].append(msg)
+
+    if dedup_videos:
+        log("🔁 Dedup ON — bỏ qua video xuất hiện ở nhiều nguồn")
 
     try:
         log(f"⚙️  WIN: ≥{criteria['min_views']:,}v | eng ≥{criteria['min_engagement_rate']}% | "
@@ -671,6 +687,9 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
         else:
             log("🌍 Browser locale: 🇻🇳 vi-VN (default, không có proxy country)")
         log(f"🔑 ms_tokens: {len(ms_tokens)} (engine dùng token đầu tiên, multi-session sẽ wire sau)")
+
+        # First token used as primary; keyword fallback (Playwright) cần single token
+        ms_token = ms_tokens[0] if ms_tokens else None
 
         # ─── TikTokApi engine + CloakBrowser context factory (anti-detect mạnh) ───
         use_cloak = os.environ.get("TIKTOK_USE_CLOAK", "true").lower() == "true"
@@ -714,14 +733,20 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
             # 1. URL mode (no WIN filter — user explicitly chose)
             if sources["video_urls"]:
                 log(f"🎯 URL mode: {len(sources['video_urls'])} video")
+                seen = job.get("_seen_video_ids")
                 for url in sources["video_urls"]:
                     vid = extract_video_id(url)
                     if not vid:
                         log(f"  ⚠️  URL không hợp lệ: {url}")
                         continue
+                    if seen is not None and vid in seen:
+                        log(f"  🔁 Skip duplicate v_id={vid}")
+                        continue
                     try:
                         video = api.video(id=vid)
                         info = await video.info()
+                        if seen is not None:
+                            seen.add(vid)
                         meta = build_video_meta(info, source=f"url:{url[:50]}")
                         job["videos"].append(meta)
                         log(f"  ✅ {vid}: {meta['play_count']:,}v | eng {meta['engagement_rate']}%")
@@ -754,20 +779,55 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
                     await _scrape_videos_generator(
                         user.videos(count=max_videos),
                         f"@{username}", max_comments, criteria, job, log,
+                        skip_win_filter=True,  # User mode = user chủ động chọn → lấy tất
                     )
                 except Exception as e:
                     log(f"  ❌ @{username}: {e}")
 
-            # 4. Keyword search
+            # 4. Keyword search — TikTokApi v7 không support search video
+            #    → fallback Playwright engine (response interception)
             for kw in sources["keywords"]:
-                log(f"🔎 search '{kw}' (max {max_videos})...")
+                log(f"🔎 search '{kw}' (max {max_videos}) — Playwright fallback...")
                 try:
-                    await _scrape_videos_generator(
-                        api.search.videos(kw, count=max_videos),
-                        f"search:{kw[:30]}", max_comments, criteria, job, log,
+                    from tiktok_scraper import crawl_by_keyword, BROWSER_DATA_DIR
+                    # Profile riêng cho keyword fallback tránh conflict với TikTokApi/CloakBrowser
+                    kw_profile = os.path.join(BROWSER_DATA_DIR + "_keyword")
+                    res = await crawl_by_keyword(
+                        kw, limit=max_videos, ms_token=ms_token,
+                        proxy=proxy_arg, country=proxy_country, data_dir=kw_profile,
                     )
+                    if not res.get("success"):
+                        log(f"  ❌ search '{kw}': {res.get('error')}")
+                        continue
+                    checked = won = 0
+                    seen = job.get("_seen_video_ids")
+                    for v in res["data"]:
+                        checked += 1
+                        vid = str(v.get("video_id", "") or "")
+                        if seen is not None and vid and vid in seen:
+                            log(f"  🔁 Skip duplicate v_id={vid}")
+                            continue
+                        stats = _scraper_stats(v)
+                        ok, reason = is_win_video(stats, criteria)
+                        if not ok:
+                            log(f"  ⏭️  v{checked} ({stats['playCount']:,}v): {reason}")
+                            continue
+                        won += 1
+                        if seen is not None and vid:
+                            seen.add(vid)
+                        meta = _scraper_to_meta(v, source=f"search:{kw[:30]}")
+                        job["videos"].append(meta)
+                        desc_preview = (meta.get("desc", "") or "")[:80]
+                        log(f"  ✅ WIN {won} @{meta['author']}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% — {desc_preview}")
+                        # Comments via TikTokApi (fast)
+                        try:
+                            video = api.video(id=v["video_id"])
+                            await _scrape_comments(video, meta, job, max_comments, log)
+                        except Exception as e:
+                            log(f"      ⚠️ Comment error: {e}")
+                    log(f"  📊 search:{kw[:30]}: {won}/{checked} WIN")
                 except Exception as e:
-                    log(f"  ❌ search '{kw}': {e}")
+                    log(f"  ❌ search '{kw}': {type(e).__name__}: {e}")
 
             # 5. Related videos
             for seed_url in sources["related_seeds"]:
@@ -794,24 +854,38 @@ async def _scrape_job(job_id, ms_tokens, num_sessions, proxies, proxy_country, s
         log(f"❌ Lỗi nghiêm trọng: {e}")
 
 
-async def _scrape_videos_generator(video_iter, source_label, max_comments, criteria, job, log):
-    """Chung cho hashtag/user/keyword/related: filter WIN rồi scrape comment."""
+async def _scrape_videos_generator(video_iter, source_label, max_comments, criteria,
+                                     job, log, skip_win_filter=False):
+    """Hashtag/keyword/related: filter WIN. URL/User mode: skip filter (user chủ động chọn)."""
     checked = won = 0
+    seen = job.get("_seen_video_ids")
     try:
         async for video in video_iter:
             d = video.as_dict
             stats = d.get("stats", {})
             checked += 1
-            ok, reason = is_win_video(stats, criteria)
-            if not ok:
-                log(f"  ⏭️  {reason}")
+            vid = str(d.get("id", "") or "")
+            if seen is not None and vid and vid in seen:
+                log(f"  🔁 Skip duplicate v_id={vid} (đã scrape từ source khác)")
                 continue
+            if not skip_win_filter:
+                ok, reason = is_win_video(stats, criteria)
+                if not ok:
+                    log(f"  ⏭️  {reason}")
+                    continue
             won += 1
+            if seen is not None and vid:
+                seen.add(vid)
             meta = build_video_meta(d, source=source_label)
             job["videos"].append(meta)
-            log(f"  ✅ WIN {won}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% | cmt {meta['comment_rate']}%")
+            desc_preview = (meta.get("desc", "") or "")[:80]
+            label = "ALL" if skip_win_filter else "WIN"
+            log(f"  ✅ {label} {won} @{meta['author']}: {meta['play_count']:,}v | eng {meta['engagement_rate']}% — {desc_preview}")
             await _scrape_comments(video, meta, job, max_comments, log)
-        log(f"  📊 {source_label}: {won}/{checked} WIN")
+        if skip_win_filter:
+            log(f"  📊 {source_label}: {won} video (no WIN filter)")
+        else:
+            log(f"  📊 {source_label}: {won}/{checked} WIN")
     except Exception as e:
         log(f"  ❌ {source_label}: {e}")
 
@@ -946,16 +1020,41 @@ Bullet points ngắn gọn:
         total_videos = len(set(r.get("video_id", "") for r in comments))
         sources_used = sorted(set(r.get("source", "") for r in comments))
 
+        # Build sample list videos cho AI biết exactly scrape từ đâu
+        sample_videos = []
+        seen_vids = set()
+        for r in comments:
+            vid = r.get("video_id", "")
+            if vid and vid not in seen_vids:
+                seen_vids.add(vid)
+                sample_videos.append({
+                    "source": r.get("source", ""),
+                    "author": r.get("author", ""),
+                    "desc": (r.get("desc", "") or "")[:100],
+                    "views": r.get("play_count", 0),
+                })
+                if len(sample_videos) >= 15:
+                    break
+        videos_block = "\n".join(
+            f"  • [{v['source']}] @{v['author']} ({v['views']:,}v): {v['desc']}"
+            for v in sample_videos
+        )
+
         report = call_ai(
             provider=provider, model=model, api_key=api_key,
             system=SYSTEM_PROMPT,
             user=f"""Tổng hợp insight từ {len(chunk_results)} batch.
-Dữ liệu: {len(comments)} comment | {total_videos} video WIN | {len(sources_used)} nguồn ({', '.join(sources_used[:5])}{'...' if len(sources_used)>5 else ''})
+Dữ liệu: {len(comments)} comment | {total_videos} video WIN | {len(sources_used)} nguồn ({', '.join(sources_used[:8])}{'...' if len(sources_used)>8 else ''})
+
+DANH SÁCH VIDEO ĐƯỢC SCRAPE (chỉ phân tích insight liên quan đến CHỦ ĐỀ của các video này):
+{videos_block}
+
+QUAN TRỌNG: chỉ rút insight về CHỦ ĐỀ trong video desc + nguồn ở trên. KHÔNG suy diễn về niche khác. Nếu comment đa số về A nhưng video chủ đề B → ưu tiên insight B.
 
 Format:
 
 # INSIGHT REPORT — TIKTOK
-> {len(comments)} comment | {total_videos} video WIN | AI: {provider}/{model}
+> {len(comments)} comment | {total_videos} video WIN | Sources: {', '.join(sources_used[:5])} | AI: {provider}/{model}
 
 ## 1. TOP PAIN POINTS (xếp theo phổ biến)
 

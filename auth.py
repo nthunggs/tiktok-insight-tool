@@ -124,6 +124,7 @@ def init_auth(app):
         session["user_email"] = user["email"]
         session["user_name"] = user.get("name") or email
         session["user_role"] = user.get("role") or "user"
+        session["user_avatar"] = user.get("avatar_url") or ""
         return jsonify({"ok": True, "user": _public_user(user)})
 
     @app.route("/auth/logout", methods=["POST", "GET"])
@@ -232,6 +233,8 @@ def init_auth(app):
             mobile = (data.get("mobile") or "").strip()
             open_id = (data.get("open_id") or "").strip()
             name = data.get("name") or data.get("en_name") or "Lark User"
+            avatar_url = (data.get("avatar_url") or data.get("avatar_big")
+                          or data.get("avatar_middle") or data.get("avatar_thumb") or "").strip()
 
             # Build identifier — prefer email, fallback to mobile@lark.local hoặc open_id@lark.local
             if email:
@@ -265,8 +268,9 @@ def init_auth(app):
                 if identifier not in whitelist and email not in whitelist and mobile not in whitelist:
                     return f"User {identifier} không trong whitelist", 403
 
-            # Auto-provision user
-            if not _find_user(identifier):
+            # Auto-provision user (hoặc update avatar nếu đã tồn tại)
+            existing = _find_user(identifier)
+            if not existing:
                 users = _load_users()
                 users.append({
                     "email": identifier,
@@ -277,13 +281,25 @@ def init_auth(app):
                     "lark_email": email,
                     "lark_mobile": mobile,
                     "lark_open_id": open_id,
+                    "avatar_url": avatar_url,
                 })
+                _save_users(users)
+            elif avatar_url and existing.get("avatar_url") != avatar_url:
+                # Update avatar nếu Lark đổi
+                users = _load_users()
+                for u in users:
+                    if u.get("email", "").lower() == identifier.lower():
+                        u["avatar_url"] = avatar_url
+                        if name and not u.get("name"):
+                            u["name"] = name
+                        break
                 _save_users(users)
 
             user = _find_user(identifier)
             session["user_email"] = identifier
             session["user_name"] = user.get("name") or name
             session["user_role"] = user.get("role") or "user"
+            session["user_avatar"] = user.get("avatar_url") or ""
             return redirect(url_for("index"))
         except Exception as e:
             return f"Lark OAuth lỗi: {type(e).__name__}: {e}", 500
@@ -297,4 +313,5 @@ def _public_user(u: dict) -> dict:
         "name": u.get("name"),
         "role": u.get("role"),
         "source": u.get("source"),
+        "avatar_url": u.get("avatar_url"),
     }
