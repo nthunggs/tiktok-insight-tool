@@ -53,36 +53,39 @@ def _find_user(email: str) -> Optional[dict]:
 
 
 def _bootstrap_admin() -> None:
-    """Create admin from ADMIN_EMAIL/ADMIN_PASSWORD env if users.json empty."""
+    """Create admin from ADMIN_EMAIL/ADMIN_PASSWORD env if users.json empty.
+
+    Security: Không tạo default password. Fail-loud nếu setup thiếu.
+    """
     users = _load_users()
     if users:
         return
     email = os.environ.get("ADMIN_EMAIL", "").strip()
     password = os.environ.get("ADMIN_PASSWORD", "").strip()
-    if email and password:
-        users.append({
-            "email": email,
-            "password_hash": generate_password_hash(password),
-            "name": "Admin",
-            "role": "admin",
-            "source": "bootstrap",
-        })
-        _save_users(users)
-        print(f"[auth] Bootstrapped admin: {email}")
-    else:
-        # Default admin nếu chưa setup gì cả
-        default_email = "admin@example.local"
-        default_password = "changeme123"
-        users.append({
-            "email": default_email,
-            "password_hash": generate_password_hash(default_password),
-            "name": "Admin",
-            "role": "admin",
-            "source": "default",
-        })
-        _save_users(users)
-        print(f"[auth] Created default admin: {default_email} / {default_password}")
-        print(f"[auth] ⚠️  ĐỔI password ngay bằng cách edit users.json hoặc set ADMIN_PASSWORD env")
+    if not (email and password):
+        # KHÔNG auto-create default — bắt admin set env tường minh
+        msg = (
+            "\n[auth] ⚠️  users.json trống và chưa set ADMIN_EMAIL + ADMIN_PASSWORD trong .env\n"
+            "[auth] Setup bằng 1 trong 2 cách:\n"
+            "[auth]   1. Thêm vào .env:\n"
+            "[auth]      ADMIN_EMAIL=you@yourcompany.com\n"
+            "[auth]      ADMIN_PASSWORD=<strong password>\n"
+            "[auth]   2. Hoặc tạo users.json thủ công với password_hash từ werkzeug.\n"
+            "[auth] Login sẽ KHÔNG hoạt động đến khi có ít nhất 1 user.\n"
+        )
+        print(msg)
+        return
+    if len(password) < 8:
+        print("[auth] ⚠️  ADMIN_PASSWORD < 8 ký tự — rất yếu, đổi sang password mạnh hơn")
+    users.append({
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "name": "Admin",
+        "role": "admin",
+        "source": "bootstrap",
+    })
+    _save_users(users)
+    print(f"[auth] Bootstrapped admin: {email}")
 
 
 # ─── DECORATOR ───────────────────────────────────────────────────────────────
@@ -104,7 +107,28 @@ def init_auth(app):
     app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    # SECURE cookie nếu chạy HTTPS (ngrok/production); để dev plain http vẫn work
+    if os.environ.get("SESSION_COOKIE_SECURE", "").lower() == "true":
+        app.config["SESSION_COOKIE_SECURE"] = True
     _bootstrap_admin()
+
+    # ─── CSRF guard ───
+    # Chặn cross-site form POST: require Content-Type=application/json hoặc X-Requested-With
+    # (browser cross-origin không set được 2 headers này mà ko trigger CORS preflight)
+    _CSRF_EXEMPT_PATHS = ("/auth/lark/callback",)  # Lark GET callback, không cần CSRF
+
+    @app.before_request
+    def _csrf_guard():
+        if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+            return
+        if any(request.path.startswith(p) for p in _CSRF_EXEMPT_PATHS):
+            return
+        ct = (request.content_type or "").split(";")[0].strip().lower()
+        if ct == "application/json":
+            return
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return
+        return jsonify({"error": "CSRF: cần Content-Type application/json hoặc X-Requested-With"}), 403
 
     @app.route("/login")
     def login_page():
@@ -219,7 +243,9 @@ def init_auth(app):
             ).json()
             app_token = r1.get("app_access_token")
             if not app_token:
-                return f"Lark không cấp app_access_token. Response: {r1}", 500
+                # Log chi tiết server-side, không leak qua HTTP response
+                print(f"[auth] Lark app_access_token fail: {r1}")
+                return "Lark auth lỗi: app credentials sai hoặc Lark API down. Check server logs.", 500
 
             # 2. Exchange code → user_access_token + user info
             r2 = requests.post(
@@ -249,15 +275,16 @@ def init_auth(app):
                 identifier = f"{open_id}@lark.local"
                 login_method = "open_id"
             else:
+                # Log chi tiết server-side, response cho user generic
+                print(f"[auth] Lark user info thiếu: keys={list(data.keys())}")
                 return (
-                    f"Lark không trả về email/mobile/open_id nào.<br>"
-                    f"Response: {data}<br><br>"
-                    f"Anh kiểm tra Lark app đã enable scopes:"
-                    f"<ul>"
-                    f"<li><code>contact:user.email:readonly</code></li>"
-                    f"<li><code>contact:user.base:readonly</code> (cho mobile)</li>"
-                    f"<li><code>contact:user.id:readonly</code> (cho open_id)</li>"
-                    f"</ul>",
+                    "Lark không trả về email/mobile/open_id.<br>"
+                    "Vào Lark Developer Console enable scopes:"
+                    "<ul>"
+                    "<li><code>contact:user.email:readonly</code></li>"
+                    "<li><code>contact:user.base:readonly</code> (cho mobile)</li>"
+                    "<li><code>contact:user.id:readonly</code> (cho open_id)</li>"
+                    "</ul>",
                     400,
                 )
 
@@ -302,7 +329,9 @@ def init_auth(app):
             session["user_avatar"] = user.get("avatar_url") or ""
             return redirect(url_for("index"))
         except Exception as e:
-            return f"Lark OAuth lỗi: {type(e).__name__}: {e}", 500
+            # Log chi tiết, response cho user generic (tránh leak qua exception message)
+            print(f"[auth] Lark OAuth exception: {type(e).__name__}: {e}")
+            return "Lark OAuth lỗi nội bộ. Check server logs.", 500
 
 
 def _public_user(u: dict) -> dict:

@@ -12,7 +12,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -1004,7 +1005,12 @@
         _pollTimer: null,
 
         get isRunning() { return this.status === 'running' || this.status === 'analyzing'; },
-        get renderedReport() { return this.report ? marked.parse(this.report) : ''; },
+        get renderedReport() {
+          // Sanitize HTML từ AI markdown để chặn XSS (AI có thể bị prompt injection)
+          if (!this.report) return '';
+          const raw = marked.parse(this.report);
+          return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(raw) : raw;
+        },
         get availableModels() { const live = this._modelLists[this.provider]; return live && live.length ? live : FALLBACK_MODELS[this.provider] || []; },
         get placeholderKey() { return PLACEHOLDER_KEYS[this.provider]; },
         get apiKeyLink() { return KEY_LINKS[this.provider]; },
